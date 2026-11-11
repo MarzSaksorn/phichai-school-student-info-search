@@ -10,7 +10,7 @@ The local equivalent is `pnpm verify`. The web build writes only to `apps/direct
 
 ### Import directly from GitHub
 
-In Vercel, choose **Add New → Project**, import `MarzSaksorn/phichai-school-student-info-search`, and keep the repository root as the Root Directory. The committed root `vercel.json` supplies the remaining settings: pnpm frozen-lockfile installation, `pnpm build:web`, and `apps/directory-web/dist` as the output directory. No framework preset or manual build command is required. Every push to `main` can then trigger a deployment from the connected GitHub repository.
+In Vercel, choose **Add New → Project**, import `MarzSaksorn/phichai-school-student-info-search`, and keep the repository root as the Root Directory. The committed root `vercel.json` supplies the remaining settings: Corepack-pinned pnpm `10.15.0` frozen-lockfile installation, `corepack pnpm@10.15.0 build:web`, and `apps/directory-web/dist` as the output directory. No framework preset or manual build command is required. Every push to `main` can then trigger a deployment from the connected GitHub repository.
 
 If you prefer Vercel's monorepo project view, set Root Directory to `apps/directory-web` instead. The app-level `apps/directory-web/vercel.json` provides the equivalent build contract.
 

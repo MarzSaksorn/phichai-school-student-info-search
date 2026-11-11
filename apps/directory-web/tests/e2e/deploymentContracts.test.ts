@@ -36,14 +36,14 @@ describe("deployment contracts", () => {
 
   it("declares the Vercel project build contract", () => {
     const config = JSON.parse(read("apps/directory-web/vercel.json")) as { buildCommand?: string; installCommand?: string };
-    expect(config.installCommand).toContain("pnpm install --frozen-lockfile");
-    expect(config.buildCommand).toContain("pnpm build:web");
+    expect(config.installCommand).toContain("corepack pnpm@10.15.0 install --frozen-lockfile");
+    expect(config.buildCommand).toContain("corepack pnpm@10.15.0 build:web");
   });
 
   it("supports importing the repository from GitHub at its root directory", () => {
     const config = JSON.parse(read("vercel.json")) as { installCommand: string; buildCommand: string; outputDirectory: string };
-    expect(config.installCommand).toBe("pnpm install --frozen-lockfile");
-    expect(config.buildCommand).toBe("pnpm build:web");
+    expect(config.installCommand).toBe("corepack pnpm@10.15.0 install --frozen-lockfile");
+    expect(config.buildCommand).toBe("corepack pnpm@10.15.0 build:web");
     expect(config.outputDirectory).toBe("apps/directory-web/dist");
   });
 

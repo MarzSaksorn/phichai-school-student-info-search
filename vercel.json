@@ -1,7 +1,7 @@
 {
   "framework": null,
-  "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm build:web",
+  "installCommand": "corepack pnpm@10.15.0 install --frozen-lockfile",
+  "buildCommand": "corepack pnpm@10.15.0 build:web",
   "outputDirectory": "apps/directory-web/dist",
   "cleanUrls": true
 }

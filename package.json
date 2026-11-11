@@ -2,7 +2,7 @@
   "name": "phichai-school-global-directory",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@10.15.0",
   "scripts": {
     "test": "vitest run",
     "lint": "tsc --noEmit",
