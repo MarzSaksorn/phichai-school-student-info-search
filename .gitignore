@@ -1,0 +1,22 @@
+node_modules/
+.next/
+dist/
+build/
+coverage/
+.turbo/
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
+supabase/.temp/
+.supabase/
+
+# Local development data and logs
+*.log
+reports/
+
+# Secrets and credentials
+*.pem
+*.key
+credentials.json
