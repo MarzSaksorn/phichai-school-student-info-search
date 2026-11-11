@@ -9,7 +9,8 @@ describe("acceptance: generated public page accessibility contract", () => {
     expect(html).toMatch(/<html\s+lang="th"/u);
     expect(html).toMatch(/href="#main-content"/u);
     expect(html).toMatch(/<main\s+id="main-content"/u);
-    expect(html).toMatch(/<h1>/u);
+    expect(html).toMatch(/<nav\s+class="header-nav"/u);
+    expect(html).toMatch(/<h1[^>]*>/u);
   });
 
   it("provides visible focus styling and reduced-motion behavior", () => {
