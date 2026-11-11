@@ -9,6 +9,7 @@ import {
 import { updateImportJobStatus } from "../repositories/importJobs.js";
 import type { DatasetVersion } from "../repositories/types.js";
 import type { NormalizedStudent } from "../import/normalizeStudent.js";
+import type { SearchIndex } from "../search/searchIndex.js";
 
 export type PublishDatasetInput = {
   store: DirectoryStore;
@@ -16,6 +17,7 @@ export type PublishDatasetInput = {
   actor: Actor;
   version: string;
   indexRecords?: (versionId: string, students: NormalizedStudent[]) => Promise<void>;
+  searchIndex?: SearchIndex;
 };
 
 export async function publishDataset(input: PublishDatasetInput): Promise<DatasetVersion> {
@@ -47,6 +49,7 @@ export async function publishDataset(input: PublishDatasetInput): Promise<Datase
   try {
     await updateImportJobStatus(input.store, input.jobId, "indexing");
     await input.indexRecords?.(version.id, validated.students);
+    await input.searchIndex?.replaceVersion(version.id, validated.students);
     input.store.normalizedStudents.set(version.id, structuredClone(validated.students));
     const storedVersion = input.store.datasetVersions.get(version.id);
     if (!storedVersion) throw new Error("Dataset version disappeared during indexing");
