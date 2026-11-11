@@ -51,4 +51,11 @@ describe("deployment contracts", () => {
     const routes = JSON.parse(read("apps/directory-web/dist/manus-routes.json")) as { routes: Array<{ path: string; protected?: boolean }> };
     expect(routes.routes).toContainEqual({ path: "/admin", title: "ผู้ดูแลระบบ · สารบบโรงเรียนพิชัย", protected: true });
   });
+
+  it("ships the Supabase-backed Vercel API handler set", () => {
+    expect(read("api/search.ts")).toContain("searchPublishedStudents");
+    expect(read("api/admin/imports.ts")).toContain("approved_student_xlsx");
+    expect(read("api/admin/imports/[jobId]/publish.ts")).toContain("publish_succeeded");
+    expect(read("api/admin/versions/[versionId]/rollback.ts")).toContain("rollback_succeeded");
+  });
 });

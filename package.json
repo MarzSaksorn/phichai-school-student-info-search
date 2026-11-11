@@ -16,8 +16,13 @@
     "verify": "pnpm build:web && pnpm test && pnpm test:integration && pnpm test:e2e && pnpm lint && pnpm typecheck && pnpm test:a11y && pnpm bench:search -- --dataset=approved-anonymized-fixture && pnpm audit --prod"
   },
   "devDependencies": {
+    "@types/busboy": "1.5.4",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0",
+    "busboy": "1.6.0"
   }
 }

@@ -12,7 +12,7 @@ The local equivalent is `pnpm verify`. The web build writes only to `apps/direct
 
 In Vercel, choose **Add New → Project**, import `MarzSaksorn/phichai-school-student-info-search`, and keep the repository root as the Root Directory. The committed root `vercel.json` supplies the remaining settings: Corepack-pinned pnpm `10.15.0` frozen-lockfile installation, `corepack pnpm@10.15.0 build:web`, and `apps/directory-web/dist` as the output directory. No framework preset or manual build command is required. Every push to `main` can then trigger a deployment from the connected GitHub repository.
 
-If you prefer Vercel's monorepo project view, set Root Directory to `apps/directory-web` instead. The app-level `apps/directory-web/vercel.json` provides the equivalent build contract.
+Keep the Root Directory at the repository root for Task 11. The root `api/` directory contains the Vercel serverless functions; setting Root Directory to `apps/directory-web` would publish the static UI but omit those functions.
 
 `.github/workflows/deploy-vercel.yml` deploys a preview for pull requests and production for pushes to `main`. Deployment jobs are intentionally skipped when any required secret is absent. Configure these repository or environment secrets in GitHub:
 
@@ -22,7 +22,12 @@ If you prefer Vercel's monorepo project view, set Root Directory to `apps/direct
 
 The workflow never stores these values in source, logs them, or passes them as URL parameters. Production deployment uses the protected `production` environment so approval rules can be enabled in GitHub.
 
-The current Vercel deployment publishes the public UI and protected admin UI as static artifacts. The browser-facing search and admin API adapters still need to be connected before production data operations work; the UI displays safe unavailable/error states until those endpoints are deployed. Supabase runtime credentials are not required during the static build and must be configured only as runtime deployment secrets when the server-backed application is connected.
+Configure these Vercel **Environment Variables** for Preview and Production. Never prefix them with `NEXT_PUBLIC_` or expose them in client code:
+
+- `SUPABASE_URL` — the project HTTPS URL.
+- `SUPABASE_SERVICE_ROLE_KEY` — the server-only service-role key. `SUPABASE_KEY` is accepted as a compatibility fallback in the handler, but the explicit service-role name is preferred.
+
+The deployed API surface is `GET /api/search`, `POST /api/admin/imports`, `GET /api/admin/imports/{jobId}`, `POST /api/admin/imports/{jobId}/publish`, and `POST /api/admin/versions/{versionId}/rollback`. Admin endpoints require a Supabase Auth bearer token whose `app_metadata.role` is one of `importer`, `publisher`, `operator`, or `owner`. The public endpoint never returns identifiers, source paths, raw values, or private metadata.
 
 ## Rollback
 
