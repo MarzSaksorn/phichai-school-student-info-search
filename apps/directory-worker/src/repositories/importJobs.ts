@@ -51,3 +51,17 @@ export async function recordImportIssue(
     job.updatedAt = now();
   }
 }
+
+export async function updateImportJobStatus(
+  store: DirectoryStore,
+  jobId: string,
+  status: ImportJob["status"]
+): Promise<ImportJob> {
+  const job = store.importJobs.get(jobId);
+  if (!job) {
+    throw new Error("Import job not found");
+  }
+  job.status = status;
+  job.updatedAt = now();
+  return structuredClone(job);
+}

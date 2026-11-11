@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@phichai/domain": "workspace:*",
+    "@supabase/supabase-js": "2.119.0",
     "exceljs": "4.4.0"
   }
 }

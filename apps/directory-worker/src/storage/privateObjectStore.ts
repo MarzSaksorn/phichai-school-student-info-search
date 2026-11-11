@@ -18,6 +18,7 @@ export type PrivateSourceRef = {
 export interface PrivateObjectStore {
   putPrivateSource(input: PrivateSourceInput): Promise<PrivateSourceRef>;
   readPrivateSource(objectKey: string): Promise<Buffer>;
+  deletePrivateSource?(objectKey: string): Promise<void>;
 }
 
 export class InMemoryPrivateObjectStore implements PrivateObjectStore {
@@ -40,5 +41,9 @@ export class InMemoryPrivateObjectStore implements PrivateObjectStore {
       throw new Error("Private source object not found");
     }
     return Buffer.from(bytes);
+  }
+
+  async deletePrivateSource(objectKey: string): Promise<void> {
+    this.objects.delete(objectKey);
   }
 }

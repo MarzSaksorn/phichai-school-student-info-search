@@ -33,6 +33,22 @@ export type CreateImportJobInput = Pick<
   "id" | "sourceType" | "academicYear" | "parserVersion" | "mappingVersion" | "uploaderId" | "sourceFileIds"
 >;
 
+export type SourceFile = {
+  id: string;
+  jobId: string;
+  fileName: string;
+  contentType: string;
+  byteSize: number;
+  checksumSha256: string;
+  storagePath: string;
+  academicYear: string;
+  sourceType: SourceType;
+  uploadedBy: string;
+  uploadedAt: string;
+};
+
+export type CreateSourceFileInput = Omit<SourceFile, "uploadedAt">;
+
 export type ImportIssue = {
   id: string;
   jobId: string;
