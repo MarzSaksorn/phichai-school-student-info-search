@@ -292,3 +292,7 @@ The initial safe default is no public student-identifier display and generic no-
 - Define status, movement, transfer, and withdrawal behavior.
 - Set freshness thresholds and retention periods.
 - Assign administrator roles and approve identity provider.
+
+## Release evidence and fixture rules
+
+Every production release must retain evidence for source provenance, validation counts, public-field policy, representative searches, accessibility review, benchmark results, active-version verification, and rollback readiness. Repository acceptance fixtures must be synthetic or anonymized, must not contain production names or identifiers, and must cover duplicate names, multiple grades and rooms, invalid rows, staff categories, and multiple academic years.

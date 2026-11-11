@@ -9,8 +9,11 @@
     "typecheck": "tsc --noEmit",
     "test:watch": "vitest",
     "test:e2e": "vitest run apps/directory-web/tests/e2e",
+    "test:integration": "vitest run tests/acceptance",
+    "test:a11y": "vitest run tests/acceptance/accessibility.acceptance.test.ts",
+    "bench:search": "node scripts/bench-search.mjs",
     "build:web": "node scripts/build-web.mjs",
-    "verify": "pnpm test && pnpm test:e2e && pnpm lint && pnpm typecheck && pnpm build:web && pnpm audit --prod"
+    "verify": "pnpm test && pnpm test:integration && pnpm test:e2e && pnpm lint && pnpm typecheck && pnpm build:web && pnpm test:a11y && pnpm bench:search -- --dataset=approved-anonymized-fixture && pnpm audit --prod"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

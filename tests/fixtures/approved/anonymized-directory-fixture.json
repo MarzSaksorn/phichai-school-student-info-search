@@ -1,0 +1,22 @@
+{
+  "fixtureId": "approved-anonymized-directory-fixture-v1",
+  "sourceType": "approved_student_xlsx",
+  "academicYears": ["2568", "2569"],
+  "students": [
+    { "displayName": "เด็กชาย ก้อง ฟ้า", "studentIdentifier": "fixture-001", "grade": "ม.1", "room": "1", "academicYear": "2569", "sheet": "M1-1", "row": 2, "status": "ปกติ" },
+    { "displayName": "เด็กหญิง ก้อง ฟ้า", "studentIdentifier": "fixture-002", "grade": "ม.1", "room": "1", "academicYear": "2569", "sheet": "M1-1", "row": 3, "status": "ปกติ" },
+    { "displayName": "Alice Example", "studentIdentifier": "fixture-003", "grade": "ม.2", "room": "2", "academicYear": "2569", "sheet": "M2-2", "row": 2, "status": "ปกติ" },
+    { "displayName": "เด็กชาย รุ่นเก่า", "studentIdentifier": "fixture-004", "grade": "ม.3", "room": "1", "academicYear": "2568", "sheet": "M3-1", "row": 2, "status": "ย้าย" },
+    { "displayName": "เด็กหญิง ไม่มีเลข", "grade": "ม.1", "room": "2", "academicYear": "2569", "sheet": "M1-2", "row": 2, "status": "ปกติ" }
+  ],
+  "staffCategories": ["ครู", "บุคลากรสนับสนุน"],
+  "invalidRows": [
+    { "displayName": "", "grade": "ม.1", "room": "1", "reason": "missing_name" },
+    { "displayName": "เด็กชาย ข้อมูลเสีย", "grade": "", "room": "1", "reason": "missing_grade" },
+    { "displayName": "เด็กหญิง ห้องเสีย", "grade": "ม.1", "room": "", "reason": "missing_room" }
+  ],
+  "duplicateCases": [
+    { "studentIdentifier": "fixture-001", "sheet": "M1-1", "row": 4, "reason": "duplicate_identifier" },
+    { "displayName": "เด็กชาย ก้อง ฟ้า", "grade": "ม.1", "room": "1", "reason": "ambiguous_name" }
+  ]
+}

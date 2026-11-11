@@ -129,3 +129,5 @@ Retention periods for raw files, reports, old versions, and audit events are sch
 - [ ] New version is active only after indexing and health checks pass.
 - [ ] Public metadata and representative searches verified.
 - [ ] Audit event and release evidence recorded.
+- [ ] Automated release validation, accessibility checks, and search benchmark evidence attached to the release.
+- [ ] Pilot workbook comparison and school data-administrator sign-off completed before production publication.
