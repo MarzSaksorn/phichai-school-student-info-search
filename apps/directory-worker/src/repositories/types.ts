@@ -100,7 +100,11 @@ export type AuditEventName =
   | "rollback_requested"
   | "rollback_succeeded"
   | "source_deleted"
-  | "permission_changed";
+  | "permission_changed"
+  | "search_requested"
+  | "search_succeeded"
+  | "search_failed"
+  | "search_rate_limited";
 
 export type AuditEvent = {
   id: string;
