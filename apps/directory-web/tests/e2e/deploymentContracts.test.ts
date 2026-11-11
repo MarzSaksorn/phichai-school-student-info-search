@@ -40,6 +40,13 @@ describe("deployment contracts", () => {
     expect(config.buildCommand).toContain("pnpm build:web");
   });
 
+  it("supports importing the repository from GitHub at its root directory", () => {
+    const config = JSON.parse(read("vercel.json")) as { installCommand: string; buildCommand: string; outputDirectory: string };
+    expect(config.installCommand).toBe("pnpm install --frozen-lockfile");
+    expect(config.buildCommand).toBe("pnpm build:web");
+    expect(config.outputDirectory).toBe("apps/directory-web/dist");
+  });
+
   it("publishes a protected admin route alongside the public page", () => {
     const routes = JSON.parse(read("apps/directory-web/dist/manus-routes.json")) as { routes: Array<{ path: string; protected?: boolean }> };
     expect(routes.routes).toContainEqual({ path: "/admin", title: "ผู้ดูแลระบบ · สารบบโรงเรียนพิชัย", protected: true });
