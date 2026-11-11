@@ -20,6 +20,12 @@ importers:
 
   apps/directory-web: {}
 
+  apps/directory-worker:
+    dependencies:
+      '@phichai/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+
   packages/domain: {}
 
 packages:
