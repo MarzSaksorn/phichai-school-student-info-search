@@ -21,3 +21,13 @@ export function assertRole(actor: Actor, required: AdministratorRole): void {
     throw new Error("Insufficient administrator role");
   }
 }
+
+export function assertAdministrator(actor: Actor): void {
+  if (actor.role === "public") {
+    throw new Error("Administrator role required");
+  }
+}
+
+export function auditActorRole(actor: Actor): { actorRole: AdministratorRole } | Record<never, never> {
+  return actor.role === "public" ? {} : { actorRole: actor.role };
+}

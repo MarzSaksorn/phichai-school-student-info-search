@@ -65,3 +65,14 @@ export async function updateImportJobStatus(
   job.updatedAt = now();
   return structuredClone(job);
 }
+
+export async function updateImportJobSummary(
+  store: DirectoryStore,
+  jobId: string,
+  summary: Pick<ImportJob, "acceptedRowCount" | "rejectedRowCount" | "warningRowCount" | "blocking">
+): Promise<ImportJob> {
+  const job = store.importJobs.get(jobId);
+  if (!job) throw new Error("Import job not found");
+  Object.assign(job, summary, { updatedAt: now() });
+  return structuredClone(job);
+}
