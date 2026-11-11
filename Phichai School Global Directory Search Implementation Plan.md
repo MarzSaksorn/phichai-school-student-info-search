@@ -6,7 +6,7 @@
 
 **Architecture:** Use two lanes: a protected administrator import lane and a public search lane. XLSX files enter through an asynchronous import job, are validated and normalized into versioned records, and are atomically published to a search index. The public UI calls a search service that applies indexed matching, filters, pagination, result-field policy, and freshness metadata; the existing school website is a compatibility reference only.
 
-**Tech Stack:** Recommended greenfield baseline: TypeScript, Next.js for public/admin web routes, PostgreSQL for metadata and normalized records, S3-compatible private object storage for raw XLSX files and reports, and a search adapter backed initially by PostgreSQL `pg_trgm` plus indexed normalized fields. Keep the search adapter behind an interface so it can move to a dedicated search engine if Thai-search benchmarks require it. Use an OIDC-compatible admin identity provider when available. Confirm the hosting and identity choices in Task 0 before implementation.
+**Tech Stack:** TypeScript and Next.js for public/admin web routes deployed on Vercel; Supabase Postgres for metadata and normalized records; Supabase Storage for private raw XLSX files and reports; Supabase Auth with the school-approved OIDC-compatible identity provider when available; and a search adapter backed initially by PostgreSQL `pg_trgm` plus indexed normalized fields. Keep the search adapter behind an interface so it can move to a dedicated search engine if Thai-search benchmarks require it. Background import work runs in a retryable TypeScript worker using durable Supabase job records.
 
 **Spec:** `/home/ubuntu/PRD-phichai-global-directory-comprehensive.md`
 
