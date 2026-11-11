@@ -39,4 +39,9 @@ describe("deployment contracts", () => {
     expect(config.installCommand).toContain("pnpm install --frozen-lockfile");
     expect(config.buildCommand).toContain("pnpm build:web");
   });
+
+  it("publishes a protected admin route alongside the public page", () => {
+    const routes = JSON.parse(read("apps/directory-web/dist/manus-routes.json")) as { routes: Array<{ path: string; protected?: boolean }> };
+    expect(routes.routes).toContainEqual({ path: "/admin", title: "ผู้ดูแลระบบ · สารบบโรงเรียนพิชัย", protected: true });
+  });
 });
