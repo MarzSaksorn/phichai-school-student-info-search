@@ -1,0 +1,23 @@
+# CI/CD runbook
+
+## Verification
+
+Every pull request and every push to `main` runs `.github/workflows/ci.yml`. The workflow installs from the committed `pnpm-lock.yaml`, runs the full unit/integration suite, runs the dedicated E2E suite, performs TypeScript checks, builds the static web artifact, and runs the production dependency audit. A failed verification blocks the branch from being considered deployable.
+
+The local equivalent is `pnpm verify`. The web build writes only to `apps/directory-web/dist`, which is ignored and must not be committed.
+
+## Vercel deployment
+
+`.github/workflows/deploy-vercel.yml` deploys a preview for pull requests and production for pushes to `main`. Deployment jobs are intentionally skipped when any required secret is absent. Configure these repository or environment secrets in GitHub:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+The workflow never stores these values in source, logs them, or passes them as URL parameters. Production deployment uses the protected `production` environment so approval rules can be enabled in GitHub.
+
+The Vercel project must use `apps/directory-web/vercel.json`. Its build command invokes the root `build:web` script and publishes `apps/directory-web/dist`. Supabase runtime credentials are not required during the static build and must be configured only as runtime deployment secrets when the server-backed application is connected.
+
+## Rollback
+
+If production verification or monitoring identifies a bad deployment, use Vercel's deployment history to promote the last known-good deployment, then revert or fix the corresponding commit on `main`. Do not force-push. If the defect affects directory data rather than code, use the dataset rollback workflow and preserve the audit trail.
