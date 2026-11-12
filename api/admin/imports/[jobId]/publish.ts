@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
-import { aggregateWorkbookValidations } from "../../../../apps/directory-worker/src/import/aggregateImports.js";
 import { clientDatasetVersion } from "../../../_lib/adminView.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
 import { PUBLIC_FIELD_CONFIG_VERSION } from "../../../_lib/publicFieldConfig.js";
@@ -80,6 +79,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const { readWorkbook } = await import("../../../../apps/directory-worker/src/import/xlsxReader.js");
     const { validateWorkbook } = await import("../../../../apps/directory-worker/src/import/validateWorkbook.js");
+    const { aggregateWorkbookValidations } = await import("../../../../apps/directory-worker/src/import/aggregateImports.js");
     const perFile = [];
     const fileIdByName = new Map<string, string>();
     for (const sourceFile of sourceFiles) {
