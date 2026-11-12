@@ -1,7 +1,6 @@
 import { randomUUID, createHash } from "node:crypto";
 import Busboy from "busboy";
 import type { IncomingMessage } from "node:http";
-import { aggregateWorkbookValidations } from "../../apps/directory-worker/src/import/aggregateImports.js";
 import type { ImportSchemaConfig } from "../../apps/directory-worker/src/import/schemaRules.js";
 import type { ReadWorkbookResult } from "../../apps/directory-worker/src/import/xlsxReader.js";
 import type { ApiRequest, ApiResponse } from "../_lib/http.js";
@@ -137,6 +136,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   try {
     const { readWorkbook } = await import("../../apps/directory-worker/src/import/xlsxReader.js");
     const { validateWorkbook } = await import("../../apps/directory-worker/src/import/validateWorkbook.js");
+    const { aggregateWorkbookValidations } = await import("../../apps/directory-worker/src/import/aggregateImports.js");
     const files: PreparedWorkbook[] = [];
 
     for (const uploaded of [...upload.files].sort((a, b) => a.filename.localeCompare(b.filename, undefined, { numeric: true }))) {

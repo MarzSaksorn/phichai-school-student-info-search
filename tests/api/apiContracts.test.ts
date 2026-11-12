@@ -32,6 +32,8 @@ describe("Vercel API contracts", () => {
     const openapi = read("docs/api/openapi.yaml");
     expect(imports).toContain("MAX_WORKBOOKS = 6");
     expect(imports).toContain("aggregateWorkbookValidations");
+    expect(imports).toContain('await import("../../apps/directory-worker/src/import/aggregateImports.js")');
+    expect(imports).not.toContain('import { aggregateWorkbookValidations } from "../../apps/directory-worker/src/import/aggregateImports.js"');
     expect(schema).toContain("studentIdentifierRequired: true");
     expect(openapi).toContain("minItems: 6");
     expect(openapi).toContain("maxItems: 6");
