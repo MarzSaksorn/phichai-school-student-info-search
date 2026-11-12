@@ -39,6 +39,7 @@ const approvedRoomSheetConfig: ImportSchemaConfig = {
   roomPattern: /^\d{1,2}$/u,
   headerRow: 5,
   displayNameHeader: "ชื่อ-สกุล",
+  surnameHeader: "สกุล",
   deriveGradeFromFilename: (filename) => filename.match(/^M\.(\d)-\d{2}\.xlsx$/iu)?.[1] ? `ม.${filename.match(/^M\.(\d)-\d{2}\.xlsx$/iu)?.[1]}` : null,
   deriveRoomFromSheet: true
 };
@@ -129,5 +130,74 @@ describe("student workbook validation", () => {
     expect(result.issues).toHaveLength(0);
     expect(result.students).toHaveLength(1);
     expect(result.students[0]).toMatchObject({ grade: "ม.1", room: "1", displayName: "เด็กชาย ตัวอย่าง หนึ่ง", studentIdentifier: "001" });
+  });
+
+  it("skips footer notes that ExcelJS repeats across a merged name column", () => {
+    // The approved workbook merges the footer note across B:G, so every cell in the
+    // range - including the ชื่อ-สกุล column - reads back as the note text.
+    const footerNote = "ณ วันที่ 22 เมษายน 2569   จำนวนนักเรียนทั้งหมด";
+    const result = validateWorkbook({
+      workbook: {
+        fileId: "file-merged-footer-12",
+        checksum: "c".repeat(64),
+        sheets: [{
+          name: "1",
+          rows: [
+            ["รายชื่อนักเรียนระดับชั้นมัธยมศึกษาปีที่ 1"],
+            [],
+            [],
+            [],
+            ["เลขที่", "เลขประจำตัว", "คำนำหน้า", "ชื่อ", "สกุล", "ชื่อ-สกุล"],
+            [1, "28441", "เด็กชาย", "ตัวอย่าง", "หนึ่ง", "เด็กชาย ตัวอย่าง หนึ่ง"],
+            [2, "28442", "เด็กชาย", "ตัวอย่าง", "สอง", "เด็กชาย ตัวอย่าง สอง"],
+            [null, footerNote, footerNote, footerNote, footerNote, footerNote, 36]
+          ]
+        }]
+      },
+      fileName: "M.1-69.xlsx",
+      academicYear: "2569",
+      sourceType: "approved_student_xlsx"
+    }, approvedRoomSheetConfig);
+
+    expect(result.students.map((student) => student.displayName)).toEqual([
+      "เด็กชาย ตัวอย่าง หนึ่ง",
+      "เด็กชาย ตัวอย่าง สอง"
+    ]);
+    expect(result.students.some((student) => student.displayName.includes("จำนวนนักเรียน"))).toBe(false);
+    expect(result.issues).toHaveLength(0);
+    expect(result.blocking).toBe(false);
+  });
+
+  it("publishes the family name that the workbook keeps in its own column", () => {
+    const result = validateWorkbook({
+      workbook: {
+        fileId: "file-surname-1234",
+        checksum: "d".repeat(64),
+        sheets: [{
+          name: "2",
+          rows: [
+            [],
+            [],
+            [],
+            [],
+            ["เลขที่", "เลขประจำตัว", "คำนำหน้า", "ชื่อ", "สกุล", "ชื่อ-สกุล"],
+            [1, "28477", "เด็กชาย", "กฤติเดช", "ปิ่นจันทร์", "เด็กชายกฤติเดช"],
+            [2, "28478", "เด็กชาย", "ฉัตรปรินทร์", "อ่วมแย้ม", "เด็กชายฉัตรปรินทร์ อ่วมแย้ม"]
+          ]
+        }]
+      },
+      fileName: "M.1-69.xlsx",
+      academicYear: "2569",
+      sourceType: "approved_student_xlsx"
+    }, approvedRoomSheetConfig);
+
+    expect(result.students.map((student) => student.displayName)).toEqual([
+      "เด็กชายกฤติเดช ปิ่นจันทร์",
+      "เด็กชายฉัตรปรินทร์ อ่วมแย้ม"
+    ]);
+    expect(result.students.map((student) => student.searchName)).toEqual([
+      "เด็กชายกฤติเดช ปิ่นจันทร์",
+      "เด็กชายฉัตรปรินทร์ อ่วมแย้ม"
+    ]);
   });
 });

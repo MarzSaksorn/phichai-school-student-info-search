@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDirectoryE2EHarness } from "../../apps/directory-web/src/server/e2eHarness.js";
 
 describe("acceptance: public privacy and publication safety", () => {
-  it("omits restricted fields and rejects broad empty enumeration", async () => {
+  it("omits restricted fields from searches and from the browsable roster", async () => {
     const harness = await createDirectoryE2EHarness({ rateLimit: 20 });
     await harness.publish({ version: "2569.1" });
     const result = await harness.search("ก้อง", { pageSize: 10 });
@@ -17,7 +17,17 @@ describe("acceptance: public privacy and publication safety", () => {
       expect(item).not.toHaveProperty("sourceSheet");
       expect(item).not.toHaveProperty("sourceRow");
     }
-    expect((await harness.search("")).status).toBe(400);
+    // An empty query is a browse request: the roster lists published students only.
+    const roster = await harness.search("");
+    expect(roster.status).toBe(200);
+    const rosterBody = await roster.json();
+    expect(rosterBody.items.length).toBeGreaterThan(0);
+    for (const item of rosterBody.items) {
+      expect(item.displayName.length).toBeGreaterThan(0);
+      expect(item).not.toHaveProperty("studentIdentifier");
+      expect(item).not.toHaveProperty("searchName");
+      expect(item).not.toHaveProperty("sourceFileId");
+    }
   });
 
   it("preserves the old live version when indexing fails and restores it through rollback", async () => {

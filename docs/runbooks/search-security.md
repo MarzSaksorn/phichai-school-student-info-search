@@ -2,7 +2,7 @@
 
 ## Request limits
 
-The public search route applies a fixed-window limit by default: 60 requests per client key per 60 seconds. It returns HTTP `429`, `{"error":"RATE_LIMITED"}`, and a bounded `Retry-After` header. Page sizes remain capped at 50, query length at 120 characters, and empty-query requests require a grade or room narrowing filter.
+The public search route applies a fixed-window limit by default: 60 requests per client key per 60 seconds. It returns HTTP `429`, `{"error":"RATE_LIMITED"}`, and a bounded `Retry-After` header. Page sizes remain capped at 50 and query length at 120 characters. An empty query is a browse request: it returns the published roster one page at a time, so the rate limit and page cap are the only enumeration controls. A record whose name is a workbook summary note is never served, and no restricted field is ever included.
 
 The in-memory limiter is suitable for local tests and a single long-lived process. A Vercel or horizontally scaled deployment must inject a shared, atomic limiter implementing the `check(clientKey)` contract. Configure the limit and window from deployment policy; do not silently disable the limiter.
 

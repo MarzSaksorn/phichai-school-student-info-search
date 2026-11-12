@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ค้นหาข้อมูลนักเรียนโรงเรียนพิชัยจากข้อมูลที่โรงเรียนอนุมัติ">
-  <title>ค้นหาข้อมูลนักเรียน · โรงเรียนพิชัย</title>
+  <meta name="description" content="ค้นหาชื่อนักเรียนโรงเรียนพิชัยจากข้อมูลที่โรงเรียนอนุมัติ">
+  <title>ค้นหาชื่อนักเรียน · โรงเรียนพิชัย</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -27,7 +27,6 @@
       --radius-md: 16px;
       --shadow: 0 18px 50px rgba(23, 21, 31, .08);
     }
-
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
@@ -72,9 +71,9 @@
     .hero-copy { max-width: 560px; margin: 24px 0 0; color: var(--muted); font-size: clamp(17px, 2vw, 20px); line-height: 1.55; text-wrap: pretty; }
     .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
     .primary-button, .secondary-button { min-height: 48px; padding: 12px 20px; border-radius: 999px; border: 1px solid transparent; font-weight: 750; transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; }
-    .primary-button { background: var(--dark); color: #fff; }
+    .primary-button { background: var(--dark); color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
     .primary-button:hover { transform: translateY(-1px); background: #2c2935; box-shadow: 0 8px 18px rgba(25, 23, 32, .14); }
-    .secondary-button { background: #fff; color: var(--ink); border-color: var(--border); }
+    .secondary-button { background: #fff; color: var(--ink); border-color: var(--border); text-decoration: none; display: inline-flex; align-items: center; }
     .secondary-button:hover { background: var(--pink-soft); border-color: #f3b1ca; }
     .trust-note { margin: 18px 0 0; color: var(--muted); font-size: 13px; }
 
@@ -106,23 +105,29 @@
     .filter-select { width: 100%; min-height: 45px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--ink); }
     .popular-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 0; color: var(--muted); font-size: 13px; }
     .popular-links button { padding: 0; border: 0; background: none; color: var(--pink); font-weight: 700; }
+    .grade-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+    .grade-chips > span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+    .chip { min-height: 38px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; transition: background 160ms ease, color 160ms ease, border-color 160ms ease; }
+    .chip:hover { border-color: #d7d2dc; background: var(--pink-soft); }
+    .chip[aria-pressed="true"] { background: var(--dark); border-color: var(--dark); color: #fff; }
     .status-line { min-height: 24px; margin: 18px 2px 0; color: var(--muted); font-size: 13px; }
     .status-line[data-tone="error"] { color: var(--error); }
     .status-line[data-tone="success"] { color: #3e5f00; }
 
-    .results-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 44px 0 18px; }
+    .results-header { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin: 44px 0 18px; }
     .results-header h2 { margin: 0; font-size: 24px; letter-spacing: -.035em; }
     .result-count { color: var(--muted); font-size: 13px; }
+    .result-count strong { color: var(--ink); font-size: 15px; }
     .result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .result-card { min-height: 190px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: #fff; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; animation: card-in 300ms both; }
+    .result-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 168px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: #fff; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; animation: card-in 300ms both; }
     .result-card:hover { transform: translateY(-2px); border-color: #d7d2dc; box-shadow: 0 14px 28px rgba(23, 21, 31, .07); }
-    .result-card-top { display: flex; justify-content: space-between; gap: 12px; }
+    .result-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
     .result-index { color: var(--pink); font: 700 12px/1.2 "IBM Plex Mono", monospace; }
     .result-status { padding: 4px 8px; border-radius: 999px; background: var(--success); color: #4c6200; font-size: 11px; font-weight: 800; }
-    .result-name { margin: 24px 0 16px; font-size: 20px; line-height: 1.15; letter-spacing: -.04em; }
-    .result-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 13px; }
-    .result-meta span { padding-right: 8px; border-right: 1px solid var(--border); }
-    .result-meta span:last-child { border-right: 0; }
+    .result-name { margin: 20px 0 18px; font-size: 23px; font-weight: 700; line-height: 1.2; letter-spacing: -.035em; text-wrap: pretty; }
+    .result-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; color: var(--muted); font-size: 13px; }
+    .result-meta span { padding: 3px 10px; border-radius: 999px; background: var(--surface); }
+    .result-meta span:first-child { background: var(--pink-soft); color: #a83264; font-weight: 700; }
     .empty-state { padding: 42px 24px; border: 1px dashed #d6d1da; border-radius: 18px; background: var(--surface); text-align: center; }
     .empty-state h3 { margin: 0 0 6px; font-size: 20px; }
     .empty-state p { max-width: 460px; margin: 0 auto; color: var(--muted); }
@@ -135,14 +140,14 @@
     @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
     @media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding: 44px 0 58px; } .hero-art { max-width: 640px; min-height: 300px; } .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 640px) { .site-header, .page-shell { padding-left: 20px; padding-right: 20px; } .header-nav { display: none; } .header-note { font-size: 12px; } .hero { padding-top: 32px; } h1 { font-size: clamp(42px, 13vw, 64px); } .hero-art { min-height: 260px; } .art-card { inset: 30px 28px 28px 24px; padding: 22px; } .search-row, .filter-row { grid-template-columns: 1fr; } .search-button { width: 100%; } .section-heading { display: block; } .section-heading p { margin-top: 8px; text-align: left; } .result-grid { grid-template-columns: 1fr; } .site-footer { display: block; } .site-footer p + p { margin-top: 10px; } }
+    @media (max-width: 640px) { .site-header, .page-shell { padding-left: 20px; padding-right: 20px; } .header-nav { display: none; } .header-note { font-size: 12px; } .hero { padding-top: 32px; } h1 { font-size: clamp(42px, 13vw, 64px); } .hero-art { min-height: 260px; } .art-card { inset: 30px 28px 28px 24px; padding: 22px; } .search-row, .filter-row { grid-template-columns: 1fr; } .search-button { width: 100%; } .section-heading { display: block; } .section-heading p { margin-top: 8px; text-align: left; } .result-grid { grid-template-columns: 1fr; } .results-header { display: block; } .result-count { display: block; margin-top: 6px; } .site-footer { display: block; } .site-footer p + p { margin-top: 10px; } }
   </style>
 </head>
 <body>
   <a class="skip-link" href="#main-content">ข้ามไปยังเนื้อหาหลัก</a>
   <header class="site-header" aria-label="ส่วนหัวเว็บไซต์">
     <a class="wordmark" href="/" aria-label="โรงเรียนพิชัย หน้าหลัก"><span class="wordmark-mark" aria-hidden="true">พ</span><span>โรงเรียนพิชัย</span></a>
-    <nav class="header-nav" aria-label="การนำทางหลัก"><a href="#search">ค้นหาข้อมูล</a><a href="#about">เกี่ยวกับข้อมูล</a></nav>
+    <nav class="header-nav" aria-label="การนำทางหลัก"><a href="#search">ค้นหาชื่อ</a><a href="#results">รายชื่อทั้งหมด</a><a href="#about">เกี่ยวกับข้อมูล</a></nav>
     <span class="header-note">ข้อมูลจากโรงเรียน</span>
   </header>
 
@@ -151,38 +156,38 @@
       <section class="hero" aria-labelledby="hero-title">
         <div>
           <p class="eyebrow">PHICHAI SCHOOL DIRECTORY</p>
-          <h1 id="hero-title">ค้นหาข้อมูล<br><em>นักเรียน</em>อย่างมั่นใจ</h1>
-          <p class="hero-copy">ค้นหาชื่อนักเรียนตามข้อมูลที่โรงเรียนอนุมัติ พร้อมตัวกรองชั้นเรียนและห้องเรียนที่ใช้งานง่ายบนทุกอุปกรณ์</p>
-          <div class="hero-actions"><a class="primary-button" href="#search">เริ่มค้นหา</a><a class="secondary-button" href="#about">หลักการใช้ข้อมูล</a></div>
+          <h1 id="hero-title">ค้นชื่อ<br><em>นักเรียน</em>ทั้งโรงเรียน</h1>
+          <p class="hero-copy">พิมพ์ชื่อบางส่วนแล้วเจอทันที ทั้งโรงเรียน ทุกชั้น ทุกห้อง — รายชื่อที่โรงเรียนเผยแพร่ พร้อมระดับชั้นและห้องเรียนกำกับ</p>
+          <div class="hero-actions"><a class="primary-button" href="#search">ค้นหาชื่อนักเรียน</a><a class="secondary-button" href="#results">ดูรายชื่อทั้งหมด</a></div>
           <p class="trust-note">แสดงเฉพาะข้อมูลสาธารณะที่ได้รับอนุมัติ · ไม่แสดงเลขประจำตัวนักเรียน</p>
         </div>
-        <div class="hero-art" aria-label="ภาพประกอบระบบค้นหาข้อมูลโรงเรียน" role="img">
-          <div class="art-card"><span class="art-label">directory / 01</span><p class="art-title">Find the right<br><span style="color: var(--pink)">classroom.</span></p><div class="art-footer"><strong>PHICHAI SCHOOL</strong><span>2569 · READY</span></div></div>
+        <div class="hero-art" aria-label="ภาพประกอบระบบค้นหาชื่อนักเรียน" role="img">
+          <div class="art-card"><span class="art-label">directory / 01</span><p class="art-title">Every name,<br><span style="color: var(--lime)">one search.</span></p><div class="art-footer"><strong>PHICHAI SCHOOL</strong><span id="art-stats">2569 · ROSTER</span></div></div>
         </div>
       </section>
 
       <section id="search" class="search-section" aria-labelledby="search-title">
-        <div class="section-heading"><h2 id="search-title">ค้นหาในสารบบ</h2><p>พิมพ์ชื่อบางส่วน หรือเลือกตัวกรองชั้นเรียนและห้องเรียนเพื่อเริ่มค้นหา</p></div>
+        <div class="section-heading"><h2 id="search-title">ค้นหาชื่อนักเรียน</h2><p>พิมพ์ชื่อ หรือเลือกชั้นเรียนและห้องเรียน รายชื่อทั้งหมดจะแสดงด้านล่าง</p></div>
         <form id="search-form" class="search-panel" novalidate>
           <div class="search-row">
-            <label class="search-input-wrap" for="query"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">คำค้นหา</span><input id="query" class="search-input" name="q" type="search" autocomplete="off" placeholder="ค้นหาด้วยชื่อ เช่น ก้อง หรือ Alice" maxlength="80"></label>
+            <label class="search-input-wrap" for="query"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">คำค้นหา</span><input id="query" class="search-input" name="q" type="search" autocomplete="off" placeholder="ค้นหาชื่อนักเรียน เช่น ก้อง หรือ ณัฐ" maxlength="80"></label>
             <button class="search-button" type="submit">ค้นหา</button>
           </div>
           <div class="filter-row" aria-label="ตัวกรองการค้นหา">
             <label class="filter-label" for="academic-year">ปีการศึกษา<select id="academic-year" class="filter-select" name="academicYear"><option value="">ทุกปีการศึกษา</option><option value="2569">2569</option><option value="2568">2568</option></select></label>
             <label class="filter-label" for="grade">ระดับชั้น<select id="grade" class="filter-select" name="grade"><option value="">ทุกระดับชั้น</option><option value="ม.1">ม.1</option><option value="ม.2">ม.2</option><option value="ม.3">ม.3</option><option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option></select></label>
-            <label class="filter-label" for="room">ห้องเรียน<select id="room" class="filter-select" name="room"><option value="">ทุกห้อง</option><option value="1">ห้อง 1</option><option value="2">ห้อง 2</option><option value="3">ห้อง 3</option><option value="4">ห้อง 4</option></select></label>
+            <label class="filter-label" for="room">ห้องเรียน<select id="room" class="filter-select" name="room"><option value="">ทุกห้อง</option><option value="1">ห้อง 1</option><option value="2">ห้อง 2</option><option value="3">ห้อง 3</option><option value="4">ห้อง 4</option><option value="5">ห้อง 5</option><option value="6">ห้อง 6</option><option value="7">ห้อง 7</option><option value="8">ห้อง 8</option><option value="9">ห้อง 9</option><option value="10">ห้อง 10</option><option value="11">ห้อง 11</option><option value="12">ห้อง 12</option></select></label>
             <label class="filter-label" for="status">สถานะ<select id="status" class="filter-select" name="status"><option value="">ทุกสถานะ</option><option value="ปกติ">ปกติ</option><option value="ย้าย">ย้าย</option></select></label>
           </div>
-          <div class="popular-links" aria-label="ตัวกรองด่วน"><span>ค้นหาเร็ว:</span><button type="button" data-filter="grade" data-value="ม.1">ม.1</button><button type="button" data-filter="grade" data-value="ม.2">ม.2</button><button type="button" data-filter="room" data-value="1">ห้อง 1</button><button type="button" data-filter="academicYear" data-value="2569">ปี 2569</button></div>
-          <p id="status-line" class="status-line" role="status" aria-live="polite">พร้อมค้นหาข้อมูลที่เผยแพร่แล้ว</p>
+          <div class="grade-chips" aria-label="ตัวกรองชั้นเรียนด่วน"><span>ดูตามชั้น:</span><button class="chip" type="button" data-filter="grade" data-value="" aria-pressed="true">ทั้งหมด</button><button class="chip" type="button" data-filter="grade" data-value="ม.1" aria-pressed="false">ม.1</button><button class="chip" type="button" data-filter="grade" data-value="ม.2" aria-pressed="false">ม.2</button><button class="chip" type="button" data-filter="grade" data-value="ม.3" aria-pressed="false">ม.3</button><button class="chip" type="button" data-filter="grade" data-value="ม.4" aria-pressed="false">ม.4</button><button class="chip" type="button" data-filter="grade" data-value="ม.5" aria-pressed="false">ม.5</button><button class="chip" type="button" data-filter="grade" data-value="ม.6" aria-pressed="false">ม.6</button></div>
+          <p id="status-line" class="status-line" role="status" aria-live="polite">พร้อมแสดงรายชื่อนักเรียนที่เผยแพร่แล้ว</p>
         </form>
       </section>
 
       <section id="results" aria-labelledby="results-title">
-        <div class="results-header"><h2 id="results-title">ผลการค้นหา</h2><span id="result-count" class="result-count">ยังไม่มีการค้นหา</span></div>
-        <div id="result-region"><div class="empty-state"><h3>เริ่มจากชื่อหรือชั้นเรียน</h3><p>ผลการค้นหาจะปรากฏที่นี่ โดยระบบจะแสดงเฉพาะข้อมูลที่เปิดเผยได้ตามนโยบายของโรงเรียน</p></div></div>
-        <div class="load-more"><button id="load-more" class="secondary-button" type="button" hidden>ดูผลลัพธ์เพิ่มเติม</button></div>
+        <div class="results-header"><h2 id="results-title">รายชื่อนักเรียน</h2><span id="result-count" class="result-count">กำลังโหลดรายชื่อ…</span></div>
+        <div id="result-region"><div class="empty-state"><h3>กำลังโหลดรายชื่อ</h3><p>ระบบกำลังดึงรายชื่อนักเรียนที่เผยแพร่ล่าสุด</p></div></div>
+        <div class="load-more"><button id="load-more" class="secondary-button" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
       </section>
 
       <section id="about" class="site-footer" aria-label="ข้อมูลเกี่ยวกับสารบบ"><p><strong>หลักการข้อมูล</strong><br>ข้อมูลนักเรียนมาจากไฟล์ XLSX ที่โรงเรียนอนุมัติเท่านั้น</p><p><strong>ความเป็นส่วนตัว</strong><br>เราไม่แสดงเลขประจำตัวหรือแหล่งที่มาภายในต่อสาธารณะ</p></section>
@@ -196,33 +201,50 @@
       const statusLine = document.querySelector('#status-line');
       const loadMore = document.querySelector('#load-more');
       const queryInput = document.querySelector('#query');
+      const artStats = document.querySelector('#art-stats');
       let nextCursor = '';
       let latestRequest = 0;
+      let rendered = 0;
 
       const setStatus = (message, tone = '') => { statusLine.textContent = message; statusLine.dataset.tone = tone; };
       const getFilters = () => ({ q: queryInput.value.trim(), academicYear: document.querySelector('#academic-year').value, grade: document.querySelector('#grade').value, room: document.querySelector('#room').value, status: document.querySelector('#status').value });
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-      const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบผลลัพธ์'; loadMore.hidden = true; };
+      const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; loadMore.hidden = true; };
+      const card = (item, index) => '<article class="result-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (item.status ? '<span class="result-status">' + escapeHtml(item.status) + '</span>' : '') + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta"><span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>';
       const renderCards = (items, append = false) => {
-        if (!append && items.length === 0) { renderEmpty('ไม่พบข้อมูลที่ตรงกัน', 'ลองค้นหาด้วยชื่อบางส่วน หรือลดตัวกรองลงหนึ่งรายการ'); return; }
-        const html = items.map((item, index) => '<article class="result-card"><div class="result-card-top"><span class="result-index">' + String(index + 1).padStart(2, '0') + '</span><span class="result-status">' + escapeHtml(item.status || 'เผยแพร่แล้ว') + '</span></div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta"><span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>').join('');
+        if (!append && items.length === 0) { renderEmpty('ไม่พบชื่อที่ตรงกัน', 'ลองพิมพ์ชื่อบางส่วน หรือเลือกชั้นเรียนใหม่'); return; }
+        const start = append ? rendered : 0;
+        const html = items.map((item, index) => card(item, start + index + 1)).join('');
         if (append) resultRegion.insertAdjacentHTML('beforeend', '<div class="result-grid">' + html + '</div>'); else resultRegion.innerHTML = '<div class="result-grid">' + html + '</div>';
+        rendered = start + items.length;
       };
       const search = async (append = false) => {
         const requestId = ++latestRequest; const filters = getFilters();
-        if (!filters.q && !filters.grade && !filters.room) { setStatus('กรุณาพิมพ์ชื่อ หรือเลือกชั้นเรียน/ห้องเรียนก่อนค้นหา', 'error'); queryInput.focus(); return; }
-        setStatus('กำลังค้นหาข้อมูล…'); if (!append) resultRegion.innerHTML = '<div class="empty-state"><h3>กำลังค้นหา</h3><p>กำลังตรวจสอบข้อมูลที่เผยแพร่ล่าสุด</p></div>';
-        const params = new URLSearchParams({ q: filters.q, pageSize: '20' }); ['academicYear', 'grade', 'room', 'status'].forEach((key) => { if (filters[key]) params.set(key, filters[key]); }); if (append && nextCursor) params.set('cursor', nextCursor);
+        if (!append) rendered = 0;
+        setStatus(append ? 'กำลังโหลดรายชื่อเพิ่มเติม…' : 'กำลังค้นหารายชื่อ…'); if (!append) resultRegion.innerHTML = '<div class="empty-state"><h3>กำลังค้นหา</h3><p>กำลังตรวจสอบรายชื่อที่เผยแพร่ล่าสุด</p></div>';
+        const params = new URLSearchParams({ q: filters.q, pageSize: '24' }); ['academicYear', 'grade', 'room', 'status'].forEach((key) => { if (filters[key]) params.set(key, filters[key]); }); if (append && nextCursor) params.set('cursor', nextCursor);
         try {
           const response = await fetch('/api/search?' + params.toString(), { headers: { accept: 'application/json' } });
           const body = await response.json(); if (requestId !== latestRequest) return;
-          if (!response.ok) { const messages = { EMPTY_QUERY_NOT_ALLOWED: 'กรุณาระบุคำค้นหาหรือเลือกตัวกรองให้แคบลง', NO_ACTIVE_DATASET: 'ขณะนี้ยังไม่มีข้อมูลที่เผยแพร่', RATE_LIMITED: 'ค้นหาถี่เกินไป กรุณารอสักครู่แล้วลองใหม่' }; renderEmpty('ยังค้นหาไม่ได้ในขณะนี้', messages[body.error] || 'ระบบค้นหาไม่พร้อมใช้งานชั่วคราว'); setStatus(messages[body.error] || 'ระบบค้นหาไม่พร้อมใช้งานชั่วคราว', 'error'); return; }
-          renderCards(body.items || [], append); nextCursor = body.nextCursor || ''; loadMore.hidden = !nextCursor; resultCount.textContent = (body.items || []).length + ' รายการ · ข้อมูลเผยแพร่ ' + body.datasetVersion; setStatus('ค้นหาสำเร็จ', 'success');
+          if (!response.ok) { const messages = { NO_ACTIVE_DATASET: 'ขณะนี้ยังไม่มีรายชื่อที่เผยแพร่', RATE_LIMITED: 'ค้นหาถี่เกินไป กรุณารอสักครู่แล้วลองใหม่' }; renderEmpty('ยังแสดงรายชื่อไม่ได้ในขณะนี้', messages[body.error] || 'ระบบค้นหาไม่พร้อมใช้งานชั่วคราว'); setStatus(messages[body.error] || 'ระบบค้นหาไม่พร้อมใช้งานชั่วคราว', 'error'); return; }
+          const items = body.items || [];
+          renderCards(items, append); nextCursor = body.nextCursor || ''; loadMore.hidden = !nextCursor;
+          const total = Number(body.total || items.length);
+          const year = (items[0] && items[0].academicYear) || filters.academicYear || '';
+          resultCount.innerHTML = '<strong>' + total.toLocaleString('th-TH') + '</strong> คน' + (year ? ' · ปีการศึกษา ' + escapeHtml(year) : '');
+          if (artStats) artStats.textContent = total.toLocaleString('th-TH') + ' NAMES';
+          setStatus(filters.q ? 'พบ ' + total.toLocaleString('th-TH') + ' ชื่อที่ตรงกับ “' + filters.q + '”' : 'แสดงรายชื่อทั้งหมด ' + total.toLocaleString('th-TH') + ' คน', 'success');
         } catch { renderEmpty('เชื่อมต่อระบบค้นหาไม่ได้', 'กรุณาตรวจสอบการเชื่อมต่อ แล้วลองใหม่อีกครั้ง'); setStatus('ไม่สามารถเชื่อมต่อระบบค้นหาได้', 'error'); }
       };
+      const syncChips = () => { const grade = document.querySelector('#grade').value; document.querySelectorAll('.grade-chips [data-filter]').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.value === grade))); };
       form.addEventListener('submit', (event) => { event.preventDefault(); nextCursor = ''; search(false); });
       loadMore.addEventListener('click', () => search(true));
-      document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelector('#' + (button.dataset.filter === 'academicYear' ? 'academic-year' : button.dataset.filter)).value = button.dataset.value; const target = document.querySelector('#search'); window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 16, behavior: 'smooth' }); search(false); }));
+      document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelector('#grade').value = button.dataset.value; syncChips(); nextCursor = ''; search(false); }));
+      document.querySelectorAll('#academic-year, #room, #status').forEach((select) => select.addEventListener('change', () => { nextCursor = ''; search(false); }));
+      let debounce = 0;
+      queryInput.addEventListener('input', () => { window.clearTimeout(debounce); debounce = window.setTimeout(() => { nextCursor = ''; search(false); }, 320); });
+      syncChips();
+      search(false);
     })();
   </script>
 </body>

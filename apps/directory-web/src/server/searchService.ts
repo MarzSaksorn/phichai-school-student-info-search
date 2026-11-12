@@ -129,9 +129,6 @@ export function createSearchService(dependencies: SearchServiceDependencies) {
       const filters = request.filters ?? {};
       validateFilters(filters);
       const normalized = normalizeSearchQuery(request.query);
-      if (normalized.isEmpty && !filters.grade && !filters.room) {
-        throw new SearchServiceError("EMPTY_QUERY_NOT_ALLOWED", "A search term or narrowing filter is required");
-      }
       const active = await getActiveDatasetVersion(dependencies.store);
       if (!active) throw new SearchServiceError("NO_ACTIVE_DATASET", "Directory is not currently available");
 

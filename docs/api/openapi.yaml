@@ -10,6 +10,10 @@ paths:
     get:
       operationId: searchStudents
       security: []
+      description: >-
+        Returns published students ordered by display name. Omitting q and every
+        filter is a browse request that lists the whole published roster, one page
+        at a time.
       parameters:
         - { name: q, in: query, schema: { type: string, maxLength: 80 } }
         - { name: academicYear, in: query, schema: { type: string, maxLength: 20 } }
@@ -91,9 +95,10 @@ components:
         publishedAt: { type: string, format: date-time }
     SearchResponse:
       type: object
-      required: [items, datasetVersion, publishedAt]
+      required: [items, total, datasetVersion, publishedAt]
       properties:
         items: { type: array, items: { $ref: '#/components/schemas/PublicStudent' } }
+        total: { type: integer, description: Total published students matching the request, across all pages }
         nextCursor: { type: string }
         datasetVersion: { type: string }
         publishedAt: { type: string, format: date-time }

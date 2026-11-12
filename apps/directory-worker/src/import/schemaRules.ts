@@ -6,6 +6,7 @@ export type ImportSchemaConfig = {
   roomPattern: RegExp;
   headerRow?: number;
   displayNameHeader?: string;
+  surnameHeader?: string;
   deriveGradeFromFilename?: (filename: string) => string | null;
   deriveRoomFromSheet?: boolean;
 };

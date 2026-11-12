@@ -22,7 +22,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const status = params.get("status") || undefined;
     const pageSizeRaw = Number(params.get("pageSize") ?? "20");
     if (!Number.isInteger(pageSizeRaw) || pageSizeRaw < 1 || pageSizeRaw > 50) { await recordTelemetry({ eventName: "request_failed", severity: "warning", route: "/api/search", requestId, statusCode: 400, durationMs: Date.now() - startedAt, errorCode: "PAGE_SIZE_INVALID" }); problem(response, 400, "BAD_REQUEST", "pageSize must be between 1 and 50"); return; }
-    if (!q.trim() && !grade && !room) { await recordTelemetry({ eventName: "request_failed", severity: "warning", route: "/api/search", requestId, statusCode: 400, durationMs: Date.now() - startedAt, errorCode: "EMPTY_QUERY_NOT_ALLOWED" }); json(response, 400, { error: "EMPTY_QUERY_NOT_ALLOWED" }); return; }
+    // An empty query is a browse request: the directory lists every published
+    // student, so the public page can show the school roster on first load.
     const key = publicClientKey(request);
     const decision = allowSearch(key);
     if (!decision.allowed) { await recordTelemetry({ eventName: "rate_limited", severity: "warning", route: "/api/search", requestId, statusCode: 429, durationMs: Date.now() - startedAt }); json(response, 429, { error: "RATE_LIMITED" }, { "retry-after": String(decision.retryAfter) }); return; }
