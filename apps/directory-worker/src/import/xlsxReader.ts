@@ -30,6 +30,16 @@ export class WorkbookReadError extends Error {
   }
 }
 
+function scalarCellValue(value: unknown): unknown {
+  if (!value || typeof value !== "object") return value;
+  const cell = value as { result?: unknown; richText?: Array<{ text?: unknown }>; text?: unknown; hyperlink?: unknown };
+  if (cell.result !== undefined) return scalarCellValue(cell.result);
+  if (Array.isArray(cell.richText)) return cell.richText.map((part) => String(part.text ?? "")).join("");
+  if (cell.text !== undefined) return scalarCellValue(cell.text);
+  if (cell.hyperlink !== undefined) return String(cell.hyperlink);
+  return value;
+}
+
 export async function readWorkbook(file: UploadedFile): Promise<ReadWorkbookResult> {
   const sourceInput = {
     sourceType: file.sourceType ?? "approved_student_xlsx",
@@ -64,7 +74,7 @@ export async function readWorkbook(file: UploadedFile): Promise<ReadWorkbookResu
         const width = Math.max(worksheet.columnCount, values.length);
         rows.push(
           Array.from({ length: width }, (_, index) => {
-            const value = values[index];
+            const value = scalarCellValue(values[index]);
             return typeof value === "string" && value.trim() === "" ? null : value ?? null;
           })
         );
