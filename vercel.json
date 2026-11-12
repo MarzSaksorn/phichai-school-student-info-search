@@ -3,5 +3,9 @@
   "installCommand": "corepack pnpm@10.15.0 install --frozen-lockfile",
   "buildCommand": "corepack pnpm@10.15.0 build:web",
   "outputDirectory": "apps/directory-web/dist",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "functions": {
+    "api/search.ts": { "regions": ["sin1"] },
+    "api/health.ts": { "regions": ["sin1"] }
+  }
 }
