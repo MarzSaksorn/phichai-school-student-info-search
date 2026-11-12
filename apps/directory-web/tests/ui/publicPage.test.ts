@@ -22,6 +22,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain("fetch('/api/search?");
     expect(source).toContain("item.displayName");
     expect(source).toContain("escapeHtml(item.displayName)");
+    expect(source).toContain("item.studentNumber");
+    expect(source).toContain("escapeHtml(item.studentNumber)");
+    expect(source).toContain("เลขประจำตัว");
     expect(source).not.toContain("item.studentIdentifier");
     expect(source).not.toContain("item.sourceFileName");
   });

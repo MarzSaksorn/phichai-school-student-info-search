@@ -68,14 +68,18 @@ describe("public search service", () => {
     expect(narrowed.items).toHaveLength(1);
   });
 
-  it("does not search identifiers unless the approved policy enables exact matching", async () => {
-    const disabled = await seeded();
-    expect((await disabled.service.searchDirectory({ query: "001", pageSize: 10 })).items).toHaveLength(0);
-    const enabled = await seeded({
+  it("shows student numbers and supports exact public number search only", async () => {
+    const enabled = await seeded();
+    const exact = await enabled.service.searchDirectory({ query: "001", pageSize: 10 });
+    expect(exact.items).toHaveLength(1);
+    expect(exact.items[0]).toMatchObject({ publicId: "student-1", studentNumber: "001" });
+    expect((await enabled.service.searchDirectory({ query: "00", pageSize: 10 })).items).toHaveLength(0);
+
+    const disabled = await seeded({
       studentPublicFields: ["displayName", "academicYear", "grade", "room"],
-      studentIdentifierSearch: "exact_only"
+      studentIdentifierSearch: "disabled"
     });
-    expect((await enabled.service.searchDirectory({ query: "001", pageSize: 10 })).items[0]?.publicId).toBe("student-1");
+    expect((await disabled.service.searchDirectory({ query: "001", pageSize: 10 })).items).toHaveLength(0);
   });
 
   it("rejects oversized pages and invalid cursors", async () => {

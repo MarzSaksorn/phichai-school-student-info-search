@@ -147,7 +147,7 @@
   <a class="skip-link" href="#main-content">ข้ามไปยังเนื้อหาหลัก</a>
   <header class="site-header" aria-label="ส่วนหัวเว็บไซต์">
     <a class="wordmark" href="/" aria-label="โรงเรียนพิชัย หน้าหลัก"><span class="wordmark-mark" aria-hidden="true">พ</span><span>โรงเรียนพิชัย</span></a>
-    <nav class="header-nav" aria-label="การนำทางหลัก"><a href="#search">ค้นหาชื่อ</a><a href="#results">รายชื่อทั้งหมด</a><a href="#about">เกี่ยวกับข้อมูล</a></nav>
+    <nav class="header-nav" aria-label="การนำทางหลัก"><a href="#search">ค้นหานักเรียน</a><a href="#results">รายชื่อทั้งหมด</a><a href="#about">เกี่ยวกับข้อมูล</a></nav>
     <span class="header-note">ข้อมูลจากโรงเรียน</span>
   </header>
 
@@ -157,9 +157,9 @@
         <div>
           <p class="eyebrow">PHICHAI SCHOOL DIRECTORY</p>
           <h1 id="hero-title">ค้นชื่อ<br><em>นักเรียน</em>ทั้งโรงเรียน</h1>
-          <p class="hero-copy">พิมพ์ชื่อบางส่วนแล้วเจอทันที ทั้งโรงเรียน ทุกชั้น ทุกห้อง — รายชื่อที่โรงเรียนเผยแพร่ พร้อมระดับชั้นและห้องเรียนกำกับ</p>
+          <p class="hero-copy">พิมพ์ชื่อบางส่วน หรือกรอกเลขประจำตัวให้ครบเพื่อค้นหาทันที ทั้งโรงเรียน ทุกชั้น ทุกห้อง — พร้อมระดับชั้นและห้องเรียนกำกับ</p>
           <div class="hero-actions"><a class="primary-button" href="#search">ค้นหาชื่อนักเรียน</a><a class="secondary-button" href="#results">ดูรายชื่อทั้งหมด</a></div>
-          <p class="trust-note">แสดงเฉพาะข้อมูลสาธารณะที่ได้รับอนุมัติ · ไม่แสดงเลขประจำตัวนักเรียน</p>
+          <p class="trust-note">ชื่อและเลขประจำตัวแสดงตามที่โรงเรียนอนุมัติ · ไม่เปิดเผยข้อมูลแหล่งที่มาภายใน</p>
         </div>
         <div class="hero-art" aria-label="ภาพประกอบระบบค้นหาชื่อนักเรียน" role="img">
           <div class="art-card"><span class="art-label">directory / 01</span><p class="art-title">Every name,<br><span style="color: var(--lime)">one search.</span></p><div class="art-footer"><strong>PHICHAI SCHOOL</strong><span id="art-stats">2569 · ROSTER</span></div></div>
@@ -167,10 +167,10 @@
       </section>
 
       <section id="search" class="search-section" aria-labelledby="search-title">
-        <div class="section-heading"><h2 id="search-title">ค้นหาชื่อนักเรียน</h2><p>พิมพ์ชื่อ หรือเลือกชั้นเรียนและห้องเรียน รายชื่อทั้งหมดจะแสดงด้านล่าง</p></div>
+        <div class="section-heading"><h2 id="search-title">ค้นหานักเรียน</h2><p>พิมพ์ชื่อบางส่วน หรือกรอกเลขประจำตัวให้ครบ รายชื่อทั้งหมดจะแสดงด้านล่าง</p></div>
         <form id="search-form" class="search-panel" novalidate>
           <div class="search-row">
-            <label class="search-input-wrap" for="query"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">คำค้นหา</span><input id="query" class="search-input" name="q" type="search" autocomplete="off" placeholder="ค้นหาชื่อนักเรียน เช่น ก้อง หรือ ณัฐ" maxlength="80"></label>
+            <label class="search-input-wrap" for="query"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">คำค้นหา</span><input id="query" class="search-input" name="q" type="search" autocomplete="off" placeholder="ค้นหาชื่อ หรือกรอกเลขประจำตัวให้ครบ" maxlength="80"></label>
             <button class="search-button" type="submit">ค้นหา</button>
           </div>
           <div class="filter-row" aria-label="ตัวกรองการค้นหา">
@@ -190,7 +190,7 @@
         <div class="load-more"><button id="load-more" class="secondary-button" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
       </section>
 
-      <section id="about" class="site-footer" aria-label="ข้อมูลเกี่ยวกับสารบบ"><p><strong>หลักการข้อมูล</strong><br>ข้อมูลนักเรียนมาจากไฟล์ XLSX ที่โรงเรียนอนุมัติเท่านั้น</p><p><strong>ความเป็นส่วนตัว</strong><br>เราไม่แสดงเลขประจำตัวหรือแหล่งที่มาภายในต่อสาธารณะ</p></section>
+      <section id="about" class="site-footer" aria-label="ข้อมูลเกี่ยวกับสารบบ"><p><strong>หลักการข้อมูล</strong><br>ข้อมูลนักเรียนมาจากไฟล์ XLSX ที่โรงเรียนอนุมัติเท่านั้น</p><p><strong>ข้อมูลที่แสดง</strong><br>ชื่อและเลขประจำตัวเผยแพร่ตามมติอนุมัติของโรงเรียน · ไม่แสดงแหล่งที่มาภายใน</p></section>
     </div>
   </main>
   <script>
@@ -210,7 +210,7 @@
       const getFilters = () => ({ q: queryInput.value.trim(), academicYear: document.querySelector('#academic-year').value, grade: document.querySelector('#grade').value, room: document.querySelector('#room').value, status: document.querySelector('#status').value });
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
       const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; loadMore.hidden = true; };
-      const card = (item, index) => '<article class="result-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (item.status ? '<span class="result-status">' + escapeHtml(item.status) + '</span>' : '') + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta"><span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>';
+      const card = (item, index) => '<article class="result-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (item.status ? '<span class="result-status">' + escapeHtml(item.status) + '</span>' : '') + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>';
       const renderCards = (items, append = false) => {
         if (!append && items.length === 0) { renderEmpty('ไม่พบชื่อที่ตรงกัน', 'ลองพิมพ์ชื่อบางส่วน หรือเลือกชั้นเรียนใหม่'); return; }
         const start = append ? rendered : 0;
@@ -233,7 +233,7 @@
           const year = (items[0] && items[0].academicYear) || filters.academicYear || '';
           resultCount.innerHTML = '<strong>' + total.toLocaleString('th-TH') + '</strong> คน' + (year ? ' · ปีการศึกษา ' + escapeHtml(year) : '');
           if (artStats) artStats.textContent = total.toLocaleString('th-TH') + ' NAMES';
-          setStatus(filters.q ? 'พบ ' + total.toLocaleString('th-TH') + ' ชื่อที่ตรงกับ “' + filters.q + '”' : 'แสดงรายชื่อทั้งหมด ' + total.toLocaleString('th-TH') + ' คน', 'success');
+          setStatus(filters.q ? 'พบ ' + total.toLocaleString('th-TH') + ' รายการที่ตรงกับคำค้น' : 'แสดงรายชื่อทั้งหมด ' + total.toLocaleString('th-TH') + ' คน', 'success');
         } catch { renderEmpty('เชื่อมต่อระบบค้นหาไม่ได้', 'กรุณาตรวจสอบการเชื่อมต่อ แล้วลองใหม่อีกครั้ง'); setStatus('ไม่สามารถเชื่อมต่อระบบค้นหาได้', 'error'); }
       };
       const syncChips = () => { const grade = document.querySelector('#grade').value; document.querySelectorAll('.grade-chips [data-filter]').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.value === grade))); };

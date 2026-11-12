@@ -15,7 +15,10 @@ paths:
         filter is a browse request that lists the whole published roster, one page
         at a time.
       parameters:
-        - { name: q, in: query, schema: { type: string, maxLength: 80 } }
+        - name: q
+          in: query
+          description: Partial name search; digit-only input matches an approved student number exactly.
+          schema: { type: string, maxLength: 80 }
         - { name: academicYear, in: query, schema: { type: string, maxLength: 20 } }
         - { name: grade, in: query, schema: { type: string, maxLength: 20 } }
         - { name: room, in: query, schema: { type: string, maxLength: 20 } }
@@ -88,6 +91,7 @@ components:
         publicId: { type: string }
         recordType: { type: string, const: student }
         displayName: { type: string }
+        studentNumber: { type: string, description: Public student number, shown only when approved_field_config authorizes it }
         academicYear: { type: string }
         grade: { type: string }
         room: { type: string }

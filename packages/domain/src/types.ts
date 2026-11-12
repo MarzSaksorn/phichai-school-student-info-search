@@ -17,6 +17,7 @@ export type PublicStudent = {
   publicId: string;
   recordType: "student";
   displayName: string;
+  studentNumber?: string;
   academicYear: string;
   grade: string;
   room: string;

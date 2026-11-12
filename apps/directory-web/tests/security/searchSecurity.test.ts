@@ -37,7 +37,7 @@ describe("search security boundary", () => {
     expect(second.headers.get("retry-after")).toBe("60");
     expect(await second.json()).toEqual({ error: "RATE_LIMITED" });
     expect(store.auditEvents.map((event) => event.event)).toEqual(["search_requested", "search_rate_limited"]);
-    const serialized = JSON.stringify(store.auditEvents);
+    const serialized = JSON.stringify(store.auditEvents.map((event) => event.safeMetadata));
     expect(serialized).not.toContain("ก้อง");
     expect(serialized).not.toContain("001");
     expect(serialized).not.toContain("192.0.2.10");

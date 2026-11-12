@@ -12,6 +12,7 @@ describe("directory end-to-end lifecycle", () => {
     const firstBody = await first.json();
     expect(firstBody.items).toHaveLength(1);
     expect(firstBody.nextCursor).toBeDefined();
+    expect(firstBody.items[0].studentNumber).toBeTruthy();
     expect(firstBody.items[0]).not.toHaveProperty("studentIdentifier");
     expect(firstBody.items[0]).not.toHaveProperty("sourceFileName");
 

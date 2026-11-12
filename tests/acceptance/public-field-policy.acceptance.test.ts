@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDirectoryE2EHarness } from "../../apps/directory-web/src/server/e2eHarness.js";
 
 describe("acceptance: public privacy and publication safety", () => {
-  it("omits restricted fields from searches and from the browsable roster", async () => {
+  it("exposes the approved student number while omitting internal identifier and source fields", async () => {
     const harness = await createDirectoryE2EHarness({ rateLimit: 20 });
     await harness.publish({ version: "2569.1" });
     const result = await harness.search("ก้อง", { pageSize: 10 });
@@ -10,6 +10,7 @@ describe("acceptance: public privacy and publication safety", () => {
     expect(result.status).toBe(200);
     expect(body.items).toHaveLength(2);
     for (const item of body.items) {
+      expect(item.studentNumber).toBeTruthy();
       expect(item).not.toHaveProperty("studentIdentifier");
       expect(item).not.toHaveProperty("searchName");
       expect(item).not.toHaveProperty("sourceFileId");
@@ -24,10 +25,16 @@ describe("acceptance: public privacy and publication safety", () => {
     expect(rosterBody.items.length).toBeGreaterThan(0);
     for (const item of rosterBody.items) {
       expect(item.displayName.length).toBeGreaterThan(0);
+      expect(item.studentNumber).toBeTruthy();
       expect(item).not.toHaveProperty("studentIdentifier");
       expect(item).not.toHaveProperty("searchName");
       expect(item).not.toHaveProperty("sourceFileId");
     }
+    const byNumber = await harness.search("001");
+    expect(byNumber.status).toBe(200);
+    expect((await byNumber.json()).items).toMatchObject([{ studentNumber: "001" }]);
+    const partialNumber = await harness.search("00");
+    expect((await partialNumber.json()).items).toHaveLength(0);
   });
 
   it("preserves the old live version when indexing fails and restores it through rollback", async () => {
