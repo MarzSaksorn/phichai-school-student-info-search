@@ -31,6 +31,10 @@ The deployed API surface is `GET /api/search`, `POST /api/admin/imports`, `GET /
 
 Configure an uptime probe for `GET /api/health` every 60 seconds. HTTP 200 means the active dataset is present and fresh; HTTP 503 means the service is degraded or freshness cannot be verified. Configure `GET /api/admin/operations` as a protected operator check, not as a public uptime probe. It reports aggregate 15-minute search, import, publication, latency, and alert metrics.
 
+### Function region
+
+`vercel.json` pins `api/search.ts` and `api/health.ts` to `sin1` (Singapore) because the school's Supabase project is `ap-southeast-1`. Each public search issues several sequential queries, so running the function in the same city as the database removes a trans-Pacific round trip from every one of them. If the Supabase project ever moves region, update these pins in the same change and re-measure `GET /api/search` time to first byte. Admin import, publish, and rollback functions are intentionally unpinned; Vercel applies its default region to them.
+
 Structured `phichai_telemetry` records are emitted to Vercel logs and retained in the private Supabase `directory.observability_events` table. The monitoring implementation deliberately excludes search text, student values, identifiers, source paths, tokens, and stack traces. Thresholds and incident procedures are documented in [the monitoring runbook](./monitoring.md).
 
 ## Rollback
