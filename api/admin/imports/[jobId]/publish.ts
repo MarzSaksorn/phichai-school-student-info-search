@@ -20,7 +20,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (!job) { problem(response, 404, "NOT_FOUND", "Import job was not found"); return; }
   if (job.status !== "ready_for_review" || job.blocking) { problem(response, 409, "BAD_REQUEST", "Import job is not ready for publication"); return; }
   const version = `${job.academic_year}.${new Date().toISOString().slice(0, 10)}.${job.id.slice(0, 8)}`;
-  const { data: sourceFile } = await client.schema("directory").from("source_files").select("id,file_name,storage_path,source_type").eq("job_id", job.id).order("created_at", { ascending: true }).limit(1).maybeSingle();
+  const { data: sourceFile, error: sourceFileError } = await client.schema("directory").from("source_files").select("id,file_name,storage_path,source_type").eq("job_id", job.id).order("uploaded_at", { ascending: true }).limit(1).maybeSingle();
+  if (sourceFileError) { problem(response, 500, "INTERNAL_ERROR", "The source workbook metadata could not be loaded"); return; }
   if (!sourceFile) { problem(response, 500, "INTERNAL_ERROR", "The import has no source workbook"); return; }
   const { data: created, error: createError } = await client.schema("directory").from("dataset_versions").insert({ version, academic_year: job.academic_year, status: "ready", parser_version: job.parser_version, mapping_version: job.mapping_version, source_file_ids: [sourceFile.id], student_count: job.accepted_row_count, staff_count: 0, warning_count: job.warning_row_count, created_by: actor.id }).select("id,version,academic_year,status,student_count,warning_count,created_at").single();
   if (createError || !created) { problem(response, 500, "INTERNAL_ERROR"); return; }
