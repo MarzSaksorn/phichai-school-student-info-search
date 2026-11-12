@@ -58,7 +58,11 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const errorRows = new Set(validated.issues.filter((issue) => issue.severity === "error" && issue.rowNumber !== undefined).map((issue) => `${issue.sheetName ?? ""}:${issue.rowNumber}`));
     const rejectedRowCount = errorRows.size || validated.issues.filter((issue) => issue.severity === "error").length;
     stage = "issue_insert";
-    for (const issue of validated.issues) await client.schema("directory").from("import_issues").insert({ job_id: jobId, severity: issue.severity, code: issue.code, file_id: sourceFileId, file_name: issue.fileName, ...(issue.sheetName ? { sheet_name: issue.sheetName } : {}), ...(issue.rowNumber ? { row_number: issue.rowNumber } : {}), safe_message: issue.message });
+    if (validated.issues.length > 0) {
+      const issueRows = validated.issues.map((issue) => ({ job_id: jobId, severity: issue.severity, code: issue.code, file_id: sourceFileId, file_name: issue.fileName, ...(issue.sheetName ? { sheet_name: issue.sheetName } : {}), ...(issue.rowNumber ? { row_number: issue.rowNumber } : {}), safe_message: issue.message }));
+      const { error: issueError } = await client.schema("directory").from("import_issues").insert(issueRows);
+      if (issueError) throw new Error("DATABASE_ERROR");
+    }
     const status = validated.blocking ? "rejected" : "ready_for_review";
     stage = "import_job_update";
     const { data: job, error: updateError } = await client.schema("directory").from("import_jobs").update({ status, accepted_row_count: validated.students.length, rejected_row_count: rejectedRowCount, warning_row_count: validated.issues.filter((issue) => issue.severity === "warning").length, blocking: validated.blocking, updated_at: new Date().toISOString() }).eq("id", jobId).select("id,status,source_type,academic_year,parser_version,mapping_version,accepted_row_count,rejected_row_count,warning_row_count,blocking,created_at,updated_at").single();
