@@ -7,6 +7,7 @@ export type ImportSchemaConfig = {
   headerRow?: number;
   displayNameHeader?: string;
   surnameHeader?: string;
+  studentIdentifierRequired?: boolean;
   deriveGradeFromFilename?: (filename: string) => string | null;
   deriveRoomFromSheet?: boolean;
 };

@@ -55,7 +55,8 @@ describe("deployment contracts", () => {
   it("ships the Supabase-backed Vercel API handler set", () => {
     expect(read("api/search.ts")).toContain("searchPublishedStudents");
     expect(read("api/admin/imports.ts")).toContain("approved_student_xlsx");
-    expect(read("api/admin/imports/[jobId]/publish.ts")).toContain("publish_succeeded");
+    expect(read("api/admin/imports/[jobId]/publish.ts")).toContain("activate_school_directory_version");
+    expect(read("apps/directory-worker/src/db/migrations/008_atomic_schoolwide_publish.sql")).toContain("publish_succeeded");
     expect(read("api/admin/versions/[versionId]/rollback.ts")).toContain("rollback_succeeded");
   });
 });

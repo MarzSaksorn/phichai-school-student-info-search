@@ -24,8 +24,11 @@ export type ReadWorkbookResult = {
 export class WorkbookReadError extends Error {
   readonly code = "WORKBOOK_INVALID" as const;
 
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message);
+    if (options?.cause !== undefined) {
+      Object.defineProperty(this, "cause", { value: options.cause, configurable: true });
+    }
     this.name = "WorkbookReadError";
   }
 }

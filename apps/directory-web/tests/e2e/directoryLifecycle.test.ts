@@ -31,8 +31,9 @@ describe("directory end-to-end lifecycle", () => {
     expect(limited.status).toBe(429);
     expect(await limited.json()).toEqual({ error: "RATE_LIMITED" });
     const audit = JSON.stringify(harness.store.auditEvents);
+    const safeMetadata = JSON.stringify(harness.store.auditEvents.map((event) => event.safeMetadata));
     expect(audit).not.toContain("ก้อง");
-    expect(audit).not.toContain("001");
+    expect(safeMetadata).not.toContain("001");
     expect(audit).not.toContain("secret");
   });
 

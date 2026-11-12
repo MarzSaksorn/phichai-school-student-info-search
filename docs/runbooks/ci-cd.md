@@ -27,7 +27,7 @@ Configure these Vercel **Environment Variables** for Preview and Production. Nev
 - `SUPABASE_URL` — the project HTTPS URL.
 - `SUPABASE_SERVICE_ROLE_KEY` — the server-only service-role key. `SUPABASE_KEY` is accepted as a compatibility fallback in the handler, but the explicit service-role name is preferred.
 
-The deployed API surface is `GET /api/search`, `POST /api/admin/imports`, `GET /api/admin/imports/{jobId}`, `POST /api/admin/imports/{jobId}/publish`, and `POST /api/admin/versions/{versionId}/rollback`. Admin endpoints require a Supabase Auth bearer token whose `app_metadata.role` is one of `importer`, `publisher`, `operator`, or `owner`. The public endpoint never returns identifiers, source paths, raw values, or private metadata.
+The deployed API surface is `GET /api/search`, `POST /api/admin/imports`, `GET /api/admin/imports/{jobId}`, `POST /api/admin/imports/{jobId}/publish`, and `POST /api/admin/versions/{versionId}/rollback`. Admin endpoints require a Supabase Auth bearer token whose `app_metadata.role` is one of `importer`, `publisher`, `operator`, or `owner`. Public responses follow the active version's approved field configuration: the school-approved policy exposes `studentNumber` and permits exact-number search, while source paths, filenames, sheet/row traces, raw workbook values, and private metadata remain restricted.
 
 Configure an uptime probe for `GET /api/health` every 60 seconds. HTTP 200 means the active dataset is present and fresh; HTTP 503 means the service is degraded or freshness cannot be verified. Configure `GET /api/admin/operations` as a protected operator check, not as a public uptime probe. It reports aggregate 15-minute search, import, publication, latency, and alert metrics.
 

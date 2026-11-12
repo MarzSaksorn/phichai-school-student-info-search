@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowsExactStudentNumberSearch, exposesStudentNumber } from "../_lib/publicFieldConfig.js";
+import { allowsExactStudentNumberSearch, exposesStudentNumber } from "../../api/_lib/publicFieldConfig.js";
 
 const approved = {
   student_public_fields: ["displayName", "studentNumber", "grade"],

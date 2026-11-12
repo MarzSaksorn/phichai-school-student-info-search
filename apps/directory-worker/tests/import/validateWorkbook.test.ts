@@ -40,6 +40,7 @@ const approvedRoomSheetConfig: ImportSchemaConfig = {
   headerRow: 5,
   displayNameHeader: "ชื่อ-สกุล",
   surnameHeader: "สกุล",
+  studentIdentifierRequired: true,
   deriveGradeFromFilename: (filename) => filename.match(/^M\.(\d)-\d{2}\.xlsx$/iu)?.[1] ? `ม.${filename.match(/^M\.(\d)-\d{2}\.xlsx$/iu)?.[1]}` : null,
   deriveRoomFromSheet: true
 };
@@ -181,8 +182,8 @@ describe("student workbook validation", () => {
             [],
             [],
             ["เลขที่", "เลขประจำตัว", "คำนำหน้า", "ชื่อ", "สกุล", "ชื่อ-สกุล"],
-            [1, "28477", "เด็กชาย", "กฤติเดช", "ปิ่นจันทร์", "เด็กชายกฤติเดช"],
-            [2, "28478", "เด็กชาย", "ฉัตรปรินทร์", "อ่วมแย้ม", "เด็กชายฉัตรปรินทร์ อ่วมแย้ม"]
+            [1, "TEST-0001", "เด็กชาย", "ตัวอย่าง", "หนึ่ง", "เด็กชายตัวอย่าง"],
+            [2, "TEST-0002", "เด็กหญิง", "ตัวอย่าง", "สอง", "เด็กหญิงตัวอย่าง สอง"]
           ]
         }]
       },
@@ -192,12 +193,46 @@ describe("student workbook validation", () => {
     }, approvedRoomSheetConfig);
 
     expect(result.students.map((student) => student.displayName)).toEqual([
-      "เด็กชายกฤติเดช ปิ่นจันทร์",
-      "เด็กชายฉัตรปรินทร์ อ่วมแย้ม"
+      "เด็กชายตัวอย่าง หนึ่ง",
+      "เด็กหญิงตัวอย่าง สอง"
     ]);
     expect(result.students.map((student) => student.searchName)).toEqual([
-      "เด็กชายกฤติเดช ปิ่นจันทร์",
-      "เด็กชายฉัตรปรินทร์ อ่วมแย้ม"
+      "เด็กชายตัวอย่าง หนึ่ง",
+      "เด็กหญิงตัวอย่าง สอง"
     ]);
+  });
+
+  it("blocks an approved room sheet without the student-number column", () => {
+    const result = validateWorkbook({
+      workbook: {
+        fileId: "file-missing-number-column",
+        checksum: "e".repeat(64),
+        sheets: [{ name: "1", rows: [[], [], [], [], ["เลขที่", "ชื่อ-สกุล"], [1, "เด็กชาย ตัวอย่าง"]] }]
+      },
+      fileName: "M.1-69.xlsx",
+      academicYear: "2569",
+      sourceType: "approved_student_xlsx"
+    }, approvedRoomSheetConfig);
+
+    expect(result.blocking).toBe(true);
+    expect(result.students).toHaveLength(0);
+    expect(result.issues[0]?.code).toBe("MISSING_STUDENT_IDENTIFIER_COLUMN");
+  });
+
+  it("rejects a row with no student number from an approved workbook", () => {
+    const result = validateWorkbook({
+      workbook: {
+        fileId: "file-empty-number",
+        checksum: "f".repeat(64),
+        sheets: [{ name: "1", rows: [[], [], [], [], ["เลขที่", "เลขประจำตัว", "ชื่อ-สกุล"], [1, null, "เด็กชาย ตัวอย่าง"]] }]
+      },
+      fileName: "M.1-69.xlsx",
+      academicYear: "2569",
+      sourceType: "approved_student_xlsx"
+    }, approvedRoomSheetConfig);
+
+    expect(result.blocking).toBe(false);
+    expect(result.students).toHaveLength(0);
+    expect(result.issues[0]?.code).toBe("MISSING_STUDENT_IDENTIFIER");
   });
 });

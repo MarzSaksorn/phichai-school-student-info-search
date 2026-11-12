@@ -16,9 +16,14 @@ export function supabaseAdmin(): SupabaseClient {
 export type AdminRole = "importer" | "publisher" | "operator" | "owner";
 export type AuthenticatedActor = { id: string; role: AdminRole };
 
+type AuthUser = { id: string; app_metadata: Record<string, unknown> };
+type AuthUserResponse = { data: { user: AuthUser | null }; error: unknown | null };
+type AuthClientWithGetUser = { getUser(jwt: string): Promise<AuthUserResponse> };
+
 export async function authenticatedActor(token: string | null): Promise<AuthenticatedActor | null> {
   if (!token) return null;
-  const { data, error } = await supabaseAdmin().auth.getUser(token);
+  const auth = supabaseAdmin().auth as unknown as AuthClientWithGetUser;
+  const { data, error } = await auth.getUser(token);
   if (error || !data.user) return null;
   const role = data.user.app_metadata?.role;
   if (role !== "importer" && role !== "publisher" && role !== "operator" && role !== "owner") return null;

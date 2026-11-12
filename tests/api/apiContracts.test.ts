@@ -24,6 +24,22 @@ describe("Vercel API contracts", () => {
     expect(read("apps/directory-worker/src/db/migrations/007_public_student_number_policy.sql")).toContain("student_identifier_display in ('disabled', 'masked', 'authenticated_only', 'public')");
   });
 
+  it("requires all six grade workbooks and student numbers before the school-wide import can publish", () => {
+    const imports = read("api/admin/imports.ts");
+    const schema = read("api/_lib/studentSchema.ts");
+    const publish = read("api/admin/imports/[jobId]/publish.ts");
+    const migration = read("apps/directory-worker/src/db/migrations/008_atomic_schoolwide_publish.sql");
+    const openapi = read("docs/api/openapi.yaml");
+    expect(imports).toContain("MAX_WORKBOOKS = 6");
+    expect(imports).toContain("aggregateWorkbookValidations");
+    expect(schema).toContain("studentIdentifierRequired: true");
+    expect(openapi).toContain("minItems: 6");
+    expect(openapi).toContain("maxItems: 6");
+    expect(publish).toContain("activate_school_directory_version");
+    expect(migration).toContain("PUBLIC_STUDENT_NUMBER_POLICY_REQUIRED");
+    expect(migration).toContain("pg_advisory_xact_lock");
+  });
+
   it("requires server-only Supabase credentials and app metadata roles", () => {
     const config = read("api/_lib/config.ts");
     const auth = read("api/_lib/supabase.ts");

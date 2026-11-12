@@ -65,7 +65,7 @@ function mapHeaders(header: unknown[], config: ImportSchemaConfig): HeaderMap | 
   const name = headerIndex(header, config.displayNameHeader ? [config.displayNameHeader] : aliases.name);
   const grade = config.deriveGradeFromFilename ? -1 : headerIndex(header, aliases.grade);
   const room = config.deriveRoomFromSheet ? -1 : headerIndex(header, aliases.room);
-  if (name < 0 || (grade < 0 && !config.deriveGradeFromFilename) || (room < 0 && !config.deriveRoomFromSheet)) return undefined;
+  if (name < 0 || (config.studentIdentifierRequired && identifier < 0) || (grade < 0 && !config.deriveGradeFromFilename) || (room < 0 && !config.deriveRoomFromSheet)) return undefined;
   const status = headerIndex(header, aliases.status);
   const surname = config.surnameHeader ? headerIndex(header, [config.surnameHeader]) : -1;
   return {
@@ -167,24 +167,27 @@ export function validateWorkbook(
       continue;
     }
 
-    const headerIndex = (config.headerRow ?? 1) - 1;
-  const headers = sheet.rows[headerIndex] ?? [];
-  const mapped = mapHeaders(headers, config);
+    const headerRowIndex = (config.headerRow ?? 1) - 1;
+    const headers = sheet.rows[headerRowIndex] ?? [];
+    const mapped = mapHeaders(headers, config);
     if (!mapped) {
+      const missingIdentifier = config.studentIdentifierRequired && headerIndex(headers, aliases.identifier) < 0;
       issues.push(
         issue({
           severity: "error",
-          code: "MISSING_REQUIRED_COLUMNS",
+          code: missingIdentifier ? "MISSING_STUDENT_IDENTIFIER_COLUMN" : "MISSING_REQUIRED_COLUMNS",
           fileName: input.fileName,
           sheetName: sheet.name,
-          message: "Sheet is missing one or more required student columns."
+          message: missingIdentifier
+            ? "The approved student-number column is missing."
+            : "Sheet is missing one or more required student columns."
         })
       );
       continue;
     }
 
     const derivedGrade = config.deriveGradeFromFilename?.(input.fileName) ?? null;
-    for (let index = headerIndex + 1; index < sheet.rows.length; index += 1) {
+    for (let index = headerRowIndex + 1; index < sheet.rows.length; index += 1) {
       const row = sheet.rows[index] ?? [];
       const sourceRow = index + 1;
       if (isBlankRow(row)) continue;
@@ -200,6 +203,19 @@ export function validateWorkbook(
         ...(mapped.identifier >= 0 ? { studentIdentifier: cell(row, mapped.identifier) } : {}),
         ...(mapped.status !== undefined ? { status: cell(row, mapped.status) } : {})
       };
+
+      if (config.studentIdentifierRequired && !source.studentIdentifier?.trim()) {
+        issues.push(
+          issue({
+            severity: "error",
+            code: "MISSING_STUDENT_IDENTIFIER",
+            fileName: input.fileName,
+            sheetName: sheet.name,
+            rowNumber: sourceRow,
+            message: "Student number is required in this school directory import."
+          })
+        );
+      }
 
       let normalized: NormalizedStudent | undefined;
       try {
