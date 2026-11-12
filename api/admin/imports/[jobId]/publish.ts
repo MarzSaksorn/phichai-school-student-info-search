@@ -3,6 +3,7 @@ import { validateWorkbook } from "../../../../apps/directory-worker/src/import/v
 import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../../../_lib/supabase.js";
+import { studentXlsxSchema } from "../../../_lib/studentSchema.js";
 import { recordTelemetry } from "../../../_lib/telemetry.js";
 
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
@@ -29,7 +30,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   const downloaded = await client.storage.from("directory-raw").download(sourceFile.storage_path);
   if (downloaded.error || !downloaded.data) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 503, "INTERNAL_ERROR"); return; }
   const workbook = await readWorkbook({ filename: sourceFile.file_name, bytes: Buffer.from(await downloaded.data.arrayBuffer()), sourceType: "approved_student_xlsx" });
-  const validated = validateWorkbook({ workbook, fileName: sourceFile.file_name, academicYear: job.academic_year, sourceType: "approved_student_xlsx" }, { schemaVersion: job.mapping_version, expectedAcademicYear: job.academic_year, studentSheetPattern: /^M\d{1,2}-\d{1,2}$/, gradePattern: /^ม\.[1-6]$/, roomPattern: /^\d{1,2}$/ });
+  const validated = validateWorkbook({ workbook, fileName: sourceFile.file_name, academicYear: job.academic_year, sourceType: "approved_student_xlsx" }, { ...studentXlsxSchema, schemaVersion: job.mapping_version, expectedAcademicYear: job.academic_year });
   if (validated.blocking) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 409, "BAD_REQUEST", "A blocking validation result prevents publication"); return; }
   const { error: recordsError } = await client.schema("directory").from("published_student_records").insert(validated.students.map((student) => ({ dataset_version_id: created.id, public_id: student.publicId, display_name: student.displayName, search_name: student.searchName, ...(student.studentIdentifier ? { student_identifier: student.studentIdentifier } : {}), academic_year: student.academicYear, grade: student.grade, room: student.room, ...(student.status ? { status: student.status } : {}), source_file_id: sourceFile.id, source_sheet: student.sourceSheet, source_row: student.sourceRow })));
   if (recordsError) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 500, "INTERNAL_ERROR"); return; }

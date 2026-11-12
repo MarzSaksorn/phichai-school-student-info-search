@@ -1,7 +1,7 @@
 # Phichai Global Directory Data Contract
 
-- **Status:** Draft contract for school approval
-- **Version:** 1.0.0-draft
+- **Status:** Approved student workbook mapping; remaining staff/retention decisions pending
+- **Version:** 1.1.0
 - **Date:** 2026-11-11
 - **Owner:** School data administrators with the implementation team
 
@@ -292,6 +292,10 @@ The initial safe default is no public student-identifier display and generic no-
 - Define status, movement, transfer, and withdrawal behavior.
 - Set freshness thresholds and retention periods.
 - Assign administrator roles and approve identity provider.
+
+## Approved student workbook mapping (2026-11-12)
+
+The school-approved `student-xlsx-room-sheets-v1` mapping accepts the approved XLSX layout represented by `M.1-69.xlsx` without storing that production workbook in the repository. The header row is row 5. Grade is derived from the filename (`M.1-69.xlsx` → `ม.1`), and room is derived from the trimmed numeric sheet name (`" 1"` → `1`). The display name is read from `ชื่อ-สกุล`; the student identifier is retained only in restricted records, with identifier search disabled and no public identifier display. The mapping publishes only display name, academic year, grade, and room. Status is omitted unless a separately approved source field is added. Staff records are not created by this student mapping.
 
 ## Release evidence and fixture rules
 

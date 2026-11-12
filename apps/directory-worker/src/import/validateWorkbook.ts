@@ -33,7 +33,7 @@ type HeaderMap = {
 };
 
 const aliases: Record<keyof HeaderMap, string[]> = {
-  identifier: ["รหัส", "รหัสนักเรียน", "รหัสประจำตัว", "student_id", "studentidentifier"],
+  identifier: ["รหัส", "รหัสนักเรียน", "รหัสประจำตัว", "เลขประจำตัว", "student_id", "studentidentifier"],
   name: ["ชื่อ", "ชื่อ-สกุล", "ชื่อสกุล", "name", "display_name"],
   grade: ["ชั้น", "ระดับชั้น", "grade"],
   room: ["ห้อง", "room"],
@@ -55,15 +55,16 @@ function issue(
 
 function headerIndex(header: unknown[], names: string[]): number {
   const normalized = header.map((value) => normalizeSafeText(String(value ?? "")).toLocaleLowerCase("th-TH"));
-  return normalized.findIndex((value) => names.includes(value));
+  const normalizedNames = names.map((name) => normalizeSafeText(name).toLocaleLowerCase("th-TH"));
+  return normalized.findIndex((value) => normalizedNames.includes(value));
 }
 
-function mapHeaders(header: unknown[]): HeaderMap | undefined {
+function mapHeaders(header: unknown[], config: ImportSchemaConfig): HeaderMap | undefined {
   const identifier = headerIndex(header, aliases.identifier);
-  const name = headerIndex(header, aliases.name);
-  const grade = headerIndex(header, aliases.grade);
-  const room = headerIndex(header, aliases.room);
-  if (name < 0 || grade < 0 || room < 0) return undefined;
+  const name = headerIndex(header, config.displayNameHeader ? [config.displayNameHeader] : aliases.name);
+  const grade = config.deriveGradeFromFilename ? -1 : headerIndex(header, aliases.grade);
+  const room = config.deriveRoomFromSheet ? -1 : headerIndex(header, aliases.room);
+  if (name < 0 || (grade < 0 && !config.deriveGradeFromFilename) || (room < 0 && !config.deriveRoomFromSheet)) return undefined;
   const status = headerIndex(header, aliases.status);
   return {
     identifier,
@@ -122,7 +123,8 @@ export function validateWorkbook(
   }
 
   for (const sheet of input.workbook.sheets) {
-    if (!config.studentSheetPattern.test(sheet.name)) {
+    const normalizedSheetName = normalizeSafeText(sheet.name);
+    if (!config.studentSheetPattern.test(normalizedSheetName)) {
       issues.push(
         issue({
           severity: "error",
@@ -135,8 +137,9 @@ export function validateWorkbook(
       continue;
     }
 
-    const headers = sheet.rows[0] ?? [];
-    const mapped = mapHeaders(headers);
+    const headerIndex = (config.headerRow ?? 1) - 1;
+  const headers = sheet.rows[headerIndex] ?? [];
+  const mapped = mapHeaders(headers, config);
     if (!mapped) {
       issues.push(
         issue({
@@ -150,15 +153,16 @@ export function validateWorkbook(
       continue;
     }
 
-    for (let index = 1; index < sheet.rows.length; index += 1) {
+    const derivedGrade = config.deriveGradeFromFilename?.(input.fileName) ?? null;
+    for (let index = headerIndex + 1; index < sheet.rows.length; index += 1) {
       const row = sheet.rows[index] ?? [];
       const sourceRow = index + 1;
       if (isBlankRow(row)) continue;
       const rowIssueStart = issues.length;
       const source: StudentSourceRow = {
         displayName: cell(row, mapped.name),
-        grade: cell(row, mapped.grade),
-        room: cell(row, mapped.room),
+        grade: derivedGrade ?? cell(row, mapped.grade),
+        room: config.deriveRoomFromSheet ? normalizedSheetName : cell(row, mapped.room),
         ...(mapped.identifier >= 0 ? { studentIdentifier: cell(row, mapped.identifier) } : {}),
         ...(mapped.status !== undefined ? { status: cell(row, mapped.status) } : {})
       };

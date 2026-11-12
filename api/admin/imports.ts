@@ -7,11 +7,12 @@ import type { ImportSchemaConfig } from "../../apps/directory-worker/src/import/
 import type { ApiRequest, ApiResponse } from "../_lib/http.js";
 import { bearerToken, json, method, problem } from "../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../_lib/supabase.js";
+import { STUDENT_XLSX_MAPPING_VERSION, studentXlsxSchema } from "../_lib/studentSchema.js";
 import { recordTelemetry } from "../_lib/telemetry.js";
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const MAX_BYTES = 10 * 1024 * 1024;
-const schema: ImportSchemaConfig = { schemaVersion: "student-v1", expectedAcademicYear: "2569", studentSheetPattern: /^M\d{1,2}-\d{1,2}$/, gradePattern: /^ม\.[1-6]$/, roomPattern: /^\d{1,2}$/ };
+const schema: ImportSchemaConfig = studentXlsxSchema;
 
 type Upload = { bytes: Buffer; filename: string; academicYear: string; mappingVersion: string; sourceType: string };
 function parseMultipart(request: IncomingMessage): Promise<Upload> {
@@ -19,7 +20,7 @@ function parseMultipart(request: IncomingMessage): Promise<Upload> {
     const contentType = request.headers["content-type"];
     if (typeof contentType !== "string" || !contentType.startsWith("multipart/form-data")) { reject(new Error("BAD_REQUEST")); return; }
     const parser = Busboy({ headers: request.headers, limits: { fileSize: MAX_BYTES, files: 1, fields: 10 } });
-    const chunks: Buffer[] = []; let filename = ""; let academicYear = ""; let mappingVersion = "student-v1"; let sourceType = "approved_student_xlsx"; let fileTooLarge = false;
+  const chunks: Buffer[] = []; let filename = ""; let academicYear = ""; let mappingVersion = STUDENT_XLSX_MAPPING_VERSION; let sourceType = "approved_student_xlsx"; let fileTooLarge = false;
     parser.on("file", (_field, file, info) => { filename = info.filename; file.on("data", (chunk: Buffer) => chunks.push(chunk)); file.on("limit", () => { fileTooLarge = true; }); });
     parser.on("field", (field, value) => { if (field === "academicYear") academicYear = value; if (field === "mappingVersion") mappingVersion = value; if (field === "sourceType") sourceType = value; });
     parser.on("error", reject);
