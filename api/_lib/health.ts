@@ -1,4 +1,4 @@
-import { evaluateAlerts, type Alert, type AlertSnapshot } from "../../apps/directory-worker/src/observability/alerts.js";
+import type { Alert, AlertSnapshot } from "../../apps/directory-worker/src/observability/alerts.js";
 import { supabaseAdmin } from "./supabase.js";
 
 export type PublicHealth = { status: "healthy" | "degraded"; checkedAt: string; freshness: { status: "fresh" | "stale" | "unknown"; publishedAt?: string; ageHours?: number } };
@@ -19,6 +19,7 @@ export async function getPublicHealth(): Promise<PublicHealth> {
 
 export async function getOperationsSnapshot(): Promise<OperationsSnapshot> {
   const checkedAt = isoNow(); const since = new Date(Date.now() - 15 * 60 * 1000).toISOString(); const health = await getPublicHealth();
+  const { evaluateAlerts } = await import("../../apps/directory-worker/src/observability/alerts.js");
   const client = supabaseAdmin();
   const [telemetry, jobs, active] = await Promise.all([
     client.schema("directory").from("observability_events").select("event_name,severity,route,duration_ms,status_code").gte("occurred_at", since).limit(5000),
