@@ -14,6 +14,7 @@ export type ProblemCode =
   | "FORBIDDEN"
   | "NOT_FOUND"
   | "RATE_LIMITED"
+  | "AUTH_UNAVAILABLE"
   | "CONFIGURATION_ERROR"
   | "INTERNAL_ERROR";
 

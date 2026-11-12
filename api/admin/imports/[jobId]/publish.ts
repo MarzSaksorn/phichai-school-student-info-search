@@ -8,7 +8,8 @@ import { recordTelemetry } from "../../../_lib/telemetry.js";
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
   const startedAt = Date.now();
-  const actor = await authenticatedActor(bearerToken(request.headers));
+  let actor;
+  try { actor = await authenticatedActor(bearerToken(request.headers)); } catch { problem(response, 503, "AUTH_UNAVAILABLE", "Server authentication is not configured"); return; }
   if (!actor) { problem(response, 401, "UNAUTHORIZED", "Publisher authentication is required"); return; }
   if (!["publisher", "owner"].includes(actor.role)) { problem(response, 403, "FORBIDDEN", "Publisher role is required"); return; }
   const jobId = Array.isArray(request.query?.jobId) ? request.query?.jobId[0] : request.query?.jobId;

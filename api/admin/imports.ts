@@ -31,7 +31,8 @@ function parseMultipart(request: IncomingMessage): Promise<Upload> {
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
   const startedAt = Date.now();
-  const actor = await authenticatedActor(bearerToken(request.headers));
+  let actor;
+  try { actor = await authenticatedActor(bearerToken(request.headers)); } catch { problem(response, 503, "AUTH_UNAVAILABLE", "Server authentication is not configured"); return; }
   if (!actor) { problem(response, 401, "UNAUTHORIZED", "Importer authentication is required"); return; }
   if (!["importer", "owner"].includes(actor.role)) { problem(response, 403, "FORBIDDEN", "Importer role is required"); return; }
   let upload: Upload;
