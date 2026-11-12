@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSchoolWorkbookSet } from "../_lib/studentWorkbookSet.js";
+import { validateSchoolWorkbookSet } from "../../api/_lib/studentWorkbookSet.js";
 
 const files = [1, 2, 3, 4, 5, 6].map((grade) => ({ filename: `M.${grade}-69.xlsx` }));
 

@@ -8,7 +8,7 @@ const state = vi.hoisted(() => ({
   ilikeCalls: [] as Array<[string, string, unknown]>
 }));
 
-vi.mock("../_lib/supabase.js", () => ({
+vi.mock("../../api/_lib/supabase.js", () => ({
   supabaseAdmin: () => ({
     schema: () => ({
       from: (table: string) => {
@@ -40,7 +40,7 @@ vi.mock("../_lib/supabase.js", () => ({
   })
 }));
 
-import { searchPublishedStudents } from "../_lib/publicSearch.js";
+import { searchPublishedStudents } from "../../api/_lib/publicSearch.js";
 
 describe("public student number search API", () => {
   beforeEach(() => {
