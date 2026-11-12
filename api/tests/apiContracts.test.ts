@@ -25,7 +25,7 @@ describe("Vercel API contracts", () => {
     const config = read("api/_lib/config.ts");
     const auth = read("api/_lib/supabase.ts");
     expect(config).toContain("SUPABASE_SERVICE_ROLE_KEY");
-    expect(config).toContain("SUPABASE_KEY");
+    expect(config).toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(auth).toContain("app_metadata?.role");
     expect(auth).not.toContain("user_metadata");
   });

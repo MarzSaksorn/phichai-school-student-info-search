@@ -15,7 +15,6 @@ export function serverConfig(): { supabaseUrl: string; serviceRoleKey: string } 
   } catch {
     throw new ServerConfigurationError("SUPABASE_URL must be an HTTPS URL");
   }
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_KEY?.trim();
-  if (!serviceRoleKey) throw new ServerConfigurationError("Missing required environment value: SUPABASE_SERVICE_ROLE_KEY");
+  const serviceRoleKey = required("SUPABASE_SERVICE_ROLE_KEY");
   return { supabaseUrl, serviceRoleKey };
 }
