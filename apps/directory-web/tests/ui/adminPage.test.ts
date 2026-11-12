@@ -11,6 +11,8 @@ describe("protected admin directory UI", () => {
     expect(source).toContain('id="main-content"');
     expect(source).toContain('id="source-file"');
     expect(source).toContain('accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"');
+    expect(source).toContain('type="file" multiple');
+    expect(source).toContain("M.1–M.6");
     expect(source).toContain('role="status" aria-live="polite"');
   });
 
@@ -21,6 +23,8 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("/rollback");
     expect(source).toContain("approved_student_xlsx");
     expect(source).toContain("window.confirm");
+    expect(source).toContain("เลขประจำตัวนักเรียนสู่สาธารณะ");
+    expect(source).toContain("authPassword.defaultValue = ''");
   });
 
   it("keeps raw row values out of the admin UI and includes safe failure states", () => {

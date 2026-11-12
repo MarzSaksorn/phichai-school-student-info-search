@@ -17,6 +17,7 @@ export const studentXlsxSchema: ImportSchemaConfig = {
   headerRow: 5,
   displayNameHeader: "ชื่อ-สกุล",
   surnameHeader: "สกุล",
+  studentIdentifierRequired: true,
   deriveGradeFromFilename,
   deriveRoomFromSheet: true
 };

@@ -296,7 +296,7 @@ The default remains no public student-number display unless an approved config i
 
 ## Approved student workbook mapping (2026-11-12)
 
-The school-approved `student-xlsx-room-sheets-v1` mapping accepts the approved XLSX layout represented by `M.1-69.xlsx` without storing that production workbook in the repository. The header row is row 5. Grade is derived from the filename (`M.1-69.xlsx` → `ม.1`), and room is derived from the trimmed numeric sheet name (`" 1"` → `1`). The display name is read from `ชื่อ-สกุล`; the student identifier is retained only in restricted records, with identifier search disabled and no public identifier display. The mapping publishes only display name, academic year, grade, and room. Status is omitted unless a separately approved source field is added. Staff records are not created by this student mapping.
+The school-approved `student-xlsx-room-sheets-v1` mapping accepts a complete cohort of six approved files, `M.1-69.xlsx` through `M.6-69.xlsx`, one for each grade and academic year. The header row is row 5. Grade is derived from the filename (`M.1-69.xlsx` → `ม.1`), and room is derived from the trimmed numeric sheet name (`" 1"` → `1`). The display name combines `ชื่อ-สกุล` and `สกุล`. A nonempty student number is required for every accepted row, and duplicates are rejected across the full six-file cohort. The identifier remains an internal `studentIdentifier` field; the active `phichai-student-number-public-v1` field configuration exposes its value as `studentNumber` and permits exact-only number search. Status is omitted unless a separately approved source field is added. Staff records are not created by this student mapping.
 
 ## Release evidence and fixture rules
 
