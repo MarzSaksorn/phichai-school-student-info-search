@@ -86,6 +86,10 @@ function isBlankRow(row: unknown[]): boolean {
   return row.every((value) => normalizeSafeText(value === null || value === undefined ? null : String(value)) === "");
 }
 
+function isAuxiliaryRow(row: unknown[], mapped: HeaderMap): boolean {
+  return !cell(row, mapped.name) && !cell(row, 0);
+}
+
 export function validateWorkbook(
   input: WorkbookInput,
   config: ImportSchemaConfig
@@ -158,6 +162,7 @@ export function validateWorkbook(
       const row = sheet.rows[index] ?? [];
       const sourceRow = index + 1;
       if (isBlankRow(row)) continue;
+      if (isAuxiliaryRow(row, mapped)) continue;
       const rowIssueStart = issues.length;
       const source: StudentSourceRow = {
         displayName: cell(row, mapped.name),
