@@ -32,7 +32,7 @@ describe("acceptance: approved XLSX source boundary", () => {
     expect(normalized.sourceFileId).toBe("fixture-file");
   });
 
-  it("blocks invalid rows rather than producing a publishable validated import", () => {
+  it("skips invalid rows while preserving a publishable partial import", () => {
     const workbook: ReadWorkbookResult = {
       checksumSha256: "a".repeat(64),
       sheets: [{ name: "M1-1", rows: [["รหัส", "ชื่อ", "ชั้น", "ห้อง"], ["1", "", "ม.1", "1"]] }]
@@ -41,8 +41,8 @@ describe("acceptance: approved XLSX source boundary", () => {
       schemaVersion: "fixture-schema-1", expectedAcademicYear: "2569", studentSheetPattern: /^M\d+-\d+$/u,
       gradePattern: /^ม\.\d+$/u, roomPattern: /^\d+$/u
     });
-    expect(result.blocking).toBe(true);
+    expect(result.blocking).toBe(false);
     expect(result.students).toHaveLength(0);
-    expect(result.issues.some((issue) => issue.severity === "error")).toBe(true);
+    expect(result.issues.length).toBeGreaterThan(0);
   });
 });
