@@ -15,18 +15,15 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   const jobId = Array.isArray(request.query?.jobId) ? request.query?.jobId[0] : request.query?.jobId;
   if (!jobId) { problem(response, 400, "BAD_REQUEST", "Import job id is required"); return; }
   const client = supabaseAdmin();
-  const { data: job, error } = await client.schema("directory").from("import_jobs").select("id,status,academic_year,parser_version,mapping_version,source_file_ids,accepted_row_count,rejected_row_count,warning_row_count,blocking").eq("id", jobId).maybeSingle();
+  const { data: job, error } = await client.schema("directory").from("import_jobs").select("id,status,academic_year,parser_version,mapping_version,accepted_row_count,rejected_row_count,warning_row_count,blocking").eq("id", jobId).maybeSingle();
   if (error) { problem(response, 500, "INTERNAL_ERROR"); return; }
   if (!job) { problem(response, 404, "NOT_FOUND", "Import job was not found"); return; }
   if (job.status !== "ready_for_review" || job.blocking) { problem(response, 409, "BAD_REQUEST", "Import job is not ready for publication"); return; }
   const version = `${job.academic_year}.${new Date().toISOString().slice(0, 10)}.${job.id.slice(0, 8)}`;
-  const { data: created, error: createError } = await client.schema("directory").from("dataset_versions").insert({ version, academic_year: job.academic_year, status: "ready", parser_version: job.parser_version, mapping_version: job.mapping_version, source_file_ids: job.source_file_ids, student_count: job.accepted_row_count, staff_count: 0, warning_count: job.warning_row_count, created_by: actor.id }).select("id,version,academic_year,status,student_count,warning_count,created_at").single();
+  const { data: sourceFile } = await client.schema("directory").from("source_files").select("id,file_name,storage_path,source_type").eq("job_id", job.id).order("created_at", { ascending: true }).limit(1).maybeSingle();
+  if (!sourceFile) { problem(response, 500, "INTERNAL_ERROR", "The import has no source workbook"); return; }
+  const { data: created, error: createError } = await client.schema("directory").from("dataset_versions").insert({ version, academic_year: job.academic_year, status: "ready", parser_version: job.parser_version, mapping_version: job.mapping_version, source_file_ids: [sourceFile.id], student_count: job.accepted_row_count, staff_count: 0, warning_count: job.warning_row_count, created_by: actor.id }).select("id,version,academic_year,status,student_count,warning_count,created_at").single();
   if (createError || !created) { problem(response, 500, "INTERNAL_ERROR"); return; }
-  const sourceFileId = Array.isArray(job.source_file_ids) ? job.source_file_ids[0] : undefined;
-  const { data: sourceFile } = sourceFileId
-    ? await client.schema("directory").from("source_files").select("id,file_name,storage_path,source_type").eq("id", sourceFileId).maybeSingle()
-    : { data: null };
-  if (!sourceFile) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 500, "INTERNAL_ERROR"); return; }
   const downloaded = await client.storage.from("directory-raw").download(sourceFile.storage_path);
   if (downloaded.error || !downloaded.data) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 503, "INTERNAL_ERROR"); return; }
   const { readWorkbook } = await import("../../../../apps/directory-worker/src/import/xlsxReader.js");

@@ -48,7 +48,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const storage = await client.storage.from("directory-raw").upload(storagePath, upload.bytes, { contentType: XLSX_MIME, cacheControl: "0", upsert: false });
     if (storage.error) throw new Error("STORAGE_ERROR");
     stage = "import_job_insert";
-    const { error: jobError } = await client.schema("directory").from("import_jobs").insert({ id: jobId, status: "validating", source_type: upload.sourceType, academic_year: upload.academicYear, parser_version: "exceljs-4.4.0", mapping_version: upload.mappingVersion, uploader_id: actor.id, source_file_ids: [sourceFileId] });
+    const { error: jobError } = await client.schema("directory").from("import_jobs").insert({ id: jobId, status: "validating", source_type: upload.sourceType, academic_year: upload.academicYear, parser_version: "exceljs-4.4.0", mapping_version: upload.mappingVersion, uploader_id: actor.id });
     if (jobError) throw new Error("DATABASE_ERROR");
     stage = "source_file_insert";
     const { error: sourceError } = await client.schema("directory").from("source_files").insert({ id: sourceFileId, job_id: jobId, file_name: upload.filename, content_type: XLSX_MIME, byte_size: upload.bytes.byteLength, checksum_sha256: checksum, storage_path: storagePath, academic_year: upload.academicYear, source_type: upload.sourceType, uploaded_by: actor.id });
