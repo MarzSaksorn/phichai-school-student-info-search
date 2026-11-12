@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterPublicResult } from "../../src/server/resultPolicy.js";
+import { DEFAULT_PUBLIC_FIELD_POLICY, filterPublicResult } from "../../src/server/resultPolicy.js";
 import type { NormalizedStudent } from "../../../directory-worker/src/import/normalizeStudent.js";
 
 const record: NormalizedStudent = {
@@ -46,5 +46,12 @@ describe("public result policy", () => {
       studentIdentifierSearch: "disabled"
     }, "2026-11-11T00:00:00.000Z");
     expect(result.status).toBe("ปกติ");
+  });
+
+  it("includes the school-approved student number under the default public policy", () => {
+    const result = filterPublicResult(record, DEFAULT_PUBLIC_FIELD_POLICY, "2026-11-11T00:00:00.000Z");
+    expect(result.studentNumber).toBe("001");
+    expect(result).not.toHaveProperty("studentIdentifier");
+    expect(result).not.toHaveProperty("sourceFileName");
   });
 });

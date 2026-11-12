@@ -1,6 +1,7 @@
 import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
 import { clientDatasetVersion } from "../../../_lib/adminView.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
+import { PUBLIC_FIELD_CONFIG_VERSION } from "../../../_lib/publicFieldConfig.js";
 import { authenticatedActor, supabaseAdmin } from "../../../_lib/supabase.js";
 import { studentXlsxSchema } from "../../../_lib/studentSchema.js";
 import { recordTelemetry } from "../../../_lib/telemetry.js";
@@ -23,7 +24,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   const { data: sourceFile, error: sourceFileError } = await client.schema("directory").from("source_files").select("id,file_name,storage_path,source_type").eq("job_id", job.id).order("uploaded_at", { ascending: true }).limit(1).maybeSingle();
   if (sourceFileError) { problem(response, 500, "INTERNAL_ERROR", "The source workbook metadata could not be loaded"); return; }
   if (!sourceFile) { problem(response, 500, "INTERNAL_ERROR", "The import has no source workbook"); return; }
-  const { data: created, error: createError } = await client.schema("directory").from("dataset_versions").insert({ version, academic_year: job.academic_year, status: "ready", parser_version: job.parser_version, mapping_version: job.mapping_version, source_file_ids: [sourceFile.id], student_count: job.accepted_row_count, staff_count: 0, warning_count: job.warning_row_count, created_by: actor.id }).select("id,version,academic_year,status,student_count,warning_count,created_at").single();
+  const { data: created, error: createError } = await client.schema("directory").from("dataset_versions").insert({ version, academic_year: job.academic_year, status: "ready", parser_version: job.parser_version, mapping_version: job.mapping_version, field_config_version: PUBLIC_FIELD_CONFIG_VERSION, source_file_ids: [sourceFile.id], student_count: job.accepted_row_count, staff_count: 0, warning_count: job.warning_row_count, created_by: actor.id }).select("id,version,academic_year,status,student_count,warning_count,created_at").single();
   if (createError || !created) { problem(response, 500, "INTERNAL_ERROR"); return; }
   const downloaded = await client.storage.from("directory-raw").download(sourceFile.storage_path);
   if (downloaded.error || !downloaded.data) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 503, "INTERNAL_ERROR"); return; }

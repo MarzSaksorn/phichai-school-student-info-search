@@ -129,6 +129,7 @@ export type PublicStudent = {
   publicId: string;
   recordType: "student";
   displayName: string;
+  studentNumber?: string;
   academicYear: string;
   grade: string;
   room: string;
@@ -148,7 +149,7 @@ export type PublicStaff = {
 };
 ```
 
-`studentIdentifier`, `searchName`, `sourceFileId`, `sourceFileName`, `sourceSheet`, `sourceRow`, raw workbook values, internal database IDs, and audit details are not public by default. The student identifier's public display and search behavior is a **School decision** and must be represented by `approved_field_config`, not hard-coded.
+`studentIdentifier` remains an internal field name; the public API may expose its value as `studentNumber` only when the dataset is linked to an `approved_field_config` version that allows public display and exact search. Search terms containing only digits use exact-match semantics; partial number matching is not supported. `searchName`, `sourceFileId`, `sourceFileName`, `sourceSheet`, `sourceRow`, raw workbook values, internal database IDs, and audit details remain private. The school-approved version `phichai-student-number-public-v1` records this decision; missing or restrictive policy config fails closed.
 
 ## Import jobs and issues
 
@@ -261,15 +262,15 @@ The approved field policy is versioned and effective-dated:
 export type ApprovedFieldConfig = {
   version: string;
   effectiveFrom: ISODateTime;
-  studentPublicFields: Array<"displayName" | "academicYear" | "grade" | "room" | "status">;
+  studentPublicFields: Array<"displayName" | "studentNumber" | "academicYear" | "grade" | "room" | "status">;
   staffPublicFields: Array<"displayName" | "category" | "departmentOrSubject" | "title" | "status">;
   studentIdentifierSearch: "disabled" | "exact_only" | "authenticated_exact_only";
-  studentIdentifierDisplay: "disabled" | "masked" | "authenticated_only";
+  studentIdentifierDisplay: "disabled" | "masked" | "authenticated_only" | "public";
   noResultDisclosure: "generic";
 };
 ```
 
-The initial safe default is no public student-identifier display and generic no-result behavior. Any broader policy requires written school approval and privacy review.
+The default remains no public student-number display unless an approved config is tied to the active dataset. The school-approved `phichai-student-number-public-v1` policy allows public display and exact search; source metadata and raw identifiers are never logged.
 
 ## State semantics
 

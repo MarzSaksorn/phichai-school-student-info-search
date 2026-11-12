@@ -14,11 +14,14 @@ describe("Vercel API contracts", () => {
     expect(existsSync(resolve(root, "api/admin/versions/[versionId]/rollback.ts"))).toBe(true);
   });
 
-  it("keeps public search projections free of restricted source fields", () => {
+  it("includes the approved public number but omits restricted source fields", () => {
     const source = read("api/_lib/publicSearch.ts");
-    expect(source).toContain("public_id,display_name,academic_year,grade,room,status");
+    expect(source).toContain("public_id,display_name,student_identifier,academic_year,grade,room,status");
+    expect(source).toContain("approved_field_config");
+    expect(source).toContain("allowsExactStudentNumberSearch(fieldConfig)");
     expect(source).not.toContain("source_file_id");
-    expect(source).not.toContain("student_identifier,");
+    expect(source).toContain('.eq("student_identifier", q)');
+    expect(read("apps/directory-worker/src/db/migrations/007_public_student_number_policy.sql")).toContain("student_identifier_display in ('disabled', 'masked', 'authenticated_only', 'public')");
   });
 
   it("requires server-only Supabase credentials and app metadata roles", () => {
