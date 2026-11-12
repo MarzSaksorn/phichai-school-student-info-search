@@ -1,8 +1,6 @@
 import { randomUUID, createHash } from "node:crypto";
 import Busboy from "busboy";
 import type { IncomingMessage } from "node:http";
-import { readWorkbook } from "../../apps/directory-worker/src/import/xlsxReader.js";
-import { validateWorkbook } from "../../apps/directory-worker/src/import/validateWorkbook.js";
 import type { ImportSchemaConfig } from "../../apps/directory-worker/src/import/schemaRules.js";
 import type { ApiRequest, ApiResponse } from "../_lib/http.js";
 import { bearerToken, json, method, problem } from "../_lib/http.js";
@@ -42,6 +40,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (upload.sourceType !== "approved_student_xlsx" || !/^\d{4}$/.test(upload.academicYear) || upload.mappingVersion !== schema.schemaVersion) { problem(response, 400, "BAD_REQUEST", "The source type, academic year, or mapping version is invalid"); return; }
   const client = supabaseAdmin(); const jobId = randomUUID(); const sourceFileId = randomUUID(); const checksum = createHash("sha256").update(upload.bytes).digest("hex"); const storagePath = `raw-xlsx/${upload.academicYear}/${jobId}/${sourceFileId}.xlsx`;
   try {
+    const { readWorkbook } = await import("../../apps/directory-worker/src/import/xlsxReader.js");
+    const { validateWorkbook } = await import("../../apps/directory-worker/src/import/validateWorkbook.js");
     const workbook = await readWorkbook({ filename: upload.filename, bytes: upload.bytes, sourceType: "approved_student_xlsx" });
     const storage = await client.storage.from("directory-raw").upload(storagePath, upload.bytes, { contentType: XLSX_MIME, cacheControl: "0", upsert: false });
     if (storage.error) throw new Error("STORAGE_ERROR");

@@ -1,5 +1,3 @@
-import { readWorkbook } from "../../../../apps/directory-worker/src/import/xlsxReader.js";
-import { validateWorkbook } from "../../../../apps/directory-worker/src/import/validateWorkbook.js";
 import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../../../_lib/supabase.js";
@@ -29,6 +27,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (!sourceFile) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 500, "INTERNAL_ERROR"); return; }
   const downloaded = await client.storage.from("directory-raw").download(sourceFile.storage_path);
   if (downloaded.error || !downloaded.data) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 503, "INTERNAL_ERROR"); return; }
+  const { readWorkbook } = await import("../../../../apps/directory-worker/src/import/xlsxReader.js");
+  const { validateWorkbook } = await import("../../../../apps/directory-worker/src/import/validateWorkbook.js");
   const workbook = await readWorkbook({ filename: sourceFile.file_name, bytes: Buffer.from(await downloaded.data.arrayBuffer()), sourceType: "approved_student_xlsx" });
   const validated = validateWorkbook({ workbook, fileName: sourceFile.file_name, academicYear: job.academic_year, sourceType: "approved_student_xlsx" }, { ...studentXlsxSchema, schemaVersion: job.mapping_version, expectedAcademicYear: job.academic_year });
   if (validated.blocking) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 409, "BAD_REQUEST", "A blocking validation result prevents publication"); return; }
