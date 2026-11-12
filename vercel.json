@@ -5,7 +5,7 @@
   "outputDirectory": "apps/directory-web/dist",
   "cleanUrls": true,
   "functions": {
-    "api/search.ts": { "region": "sin1" },
-    "api/health.ts": { "region": "sin1" }
+    "api/search.ts": { "regions": ["sin1"] },
+    "api/health.ts": { "regions": ["sin1"] }
   }
 }
