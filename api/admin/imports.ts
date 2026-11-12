@@ -7,6 +7,7 @@ import type { ImportSchemaConfig } from "../../apps/directory-worker/src/import/
 import type { ApiRequest, ApiResponse } from "../_lib/http.js";
 import { bearerToken, json, method, problem } from "../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../_lib/supabase.js";
+import { recordTelemetry } from "../_lib/telemetry.js";
 
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -31,11 +32,12 @@ function safeJob(job: Record<string, unknown>): Record<string, unknown> { const 
 
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
+  const startedAt = Date.now();
   const actor = await authenticatedActor(bearerToken(request.headers));
   if (!actor) { problem(response, 401, "UNAUTHORIZED", "Importer authentication is required"); return; }
   if (!["importer", "owner"].includes(actor.role)) { problem(response, 403, "FORBIDDEN", "Importer role is required"); return; }
   let upload: Upload;
-  try { upload = await parseMultipart(request); } catch (error) { const code = error instanceof Error ? error.message : "BAD_REQUEST"; const status = code === "FILE_TOO_LARGE" ? 413 : 400; problem(response, status, code === "FILE_TOO_LARGE" ? "BAD_REQUEST" : "BAD_REQUEST", code === "FILE_TOO_LARGE" ? "The XLSX file exceeds the 10 MiB limit" : "A valid XLSX multipart upload is required"); return; }
+  try { upload = await parseMultipart(request); } catch (error) { const code = error instanceof Error ? error.message : "BAD_REQUEST"; const status = code === "FILE_TOO_LARGE" ? 413 : 400; await recordTelemetry({ eventName: "request_failed", severity: "warning", route: "/api/admin/imports", statusCode: status, durationMs: Date.now() - startedAt, errorCode: code }); problem(response, status, "BAD_REQUEST", code === "FILE_TOO_LARGE" ? "The XLSX file exceeds the 10 MiB limit" : "A valid XLSX multipart upload is required"); return; }
   if (upload.sourceType !== "approved_student_xlsx" || !/^\d{4}$/.test(upload.academicYear) || upload.mappingVersion !== schema.schemaVersion) { problem(response, 400, "BAD_REQUEST", "The source type, academic year, or mapping version is invalid"); return; }
   const client = supabaseAdmin(); const jobId = randomUUID(); const sourceFileId = randomUUID(); const checksum = createHash("sha256").update(upload.bytes).digest("hex"); const storagePath = `raw-xlsx/${upload.academicYear}/${jobId}/${sourceFileId}.xlsx`;
   try {
@@ -54,11 +56,13 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const { data: job, error: updateError } = await client.schema("directory").from("import_jobs").update({ status, accepted_row_count: validated.students.length, rejected_row_count: rejectedRowCount, warning_row_count: validated.issues.filter((issue) => issue.severity === "warning").length, blocking: validated.blocking, updated_at: new Date().toISOString() }).eq("id", jobId).select("id,status,source_type,academic_year,parser_version,mapping_version,accepted_row_count,rejected_row_count,warning_row_count,blocking,created_at,updated_at").single();
     if (updateError || !job) throw new Error("DATABASE_ERROR");
     await client.schema("directory").from("audit_events").insert({ event: "upload", actor_id: actor.id, actor_role: actor.role, job_id: jobId, outcome: "success", safe_metadata: { byteSize: upload.bytes.byteLength, sheetCount: workbook.sheets.length } });
+    await recordTelemetry({ eventName: "request_completed", severity: "info", route: "/api/admin/imports", statusCode: 201, durationMs: Date.now() - startedAt, safeMetadata: { byteSize: upload.bytes.byteLength, rowCount: workbook.sheets.reduce((total, sheet) => total + sheet.rows.length, 0) } });
     json(response, 201, { job: safeJob(job), sourceFile: { id: sourceFileId, fileName: upload.filename, byteSize: upload.bytes.byteLength, academicYear: upload.academicYear, sourceType: upload.sourceType, checksumSha256: checksum }, fileId: sourceFileId, checksum, sheetNames: workbook.sheets.map((sheet) => sheet.name), rowCount: workbook.sheets.reduce((total, sheet) => total + sheet.rows.length, 0) });
   } catch (error) {
     try { await client.storage.from("directory-raw").remove([storagePath]); } catch { /* best-effort compensation */ }
     try { await client.schema("directory").from("import_jobs").update({ status: "rejected", blocking: true, updated_at: new Date().toISOString() }).eq("id", jobId); } catch { /* best-effort compensation */ }
     const code = error instanceof Error ? error.message : "INTERNAL_ERROR";
+    await recordTelemetry({ eventName: "request_failed", severity: "error", route: "/api/admin/imports", statusCode: code === "STORAGE_ERROR" ? 503 : 500, durationMs: Date.now() - startedAt, errorCode: code === "WORKBOOK_INVALID" ? "WORKBOOK_INVALID" : "IMPORT_FAILED" });
     problem(response, code === "STORAGE_ERROR" ? 503 : 500, code === "WORKBOOK_INVALID" ? "BAD_REQUEST" : "INTERNAL_ERROR");
   }
 }

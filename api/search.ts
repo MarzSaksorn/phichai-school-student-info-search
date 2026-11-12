@@ -4,6 +4,7 @@ import { json, method, problem } from "./_lib/http.js";
 import { allowSearch } from "./_lib/rateLimit.js";
 import { publicClientKey, searchPublishedStudents } from "./_lib/publicSearch.js";
 import { supabaseAdmin } from "./_lib/supabase.js";
+import { recordTelemetry } from "./_lib/telemetry.js";
 
 function queryValue(value: string | string[] | undefined): string { return Array.isArray(value) ? value[0] ?? "" : value ?? ""; }
 function safeQuery(request: ApiRequest): URLSearchParams { return new URLSearchParams(request.url?.split("?")[1] ?? ""); }
@@ -11,6 +12,7 @@ function safeQuery(request: ApiRequest): URLSearchParams { return new URLSearchP
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["GET"])) return;
   const requestId = randomUUID();
+  const startedAt = Date.now();
   try {
     const params = safeQuery(request);
     const q = params.get("q") ?? "";
@@ -19,19 +21,21 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const room = params.get("room") || undefined;
     const status = params.get("status") || undefined;
     const pageSizeRaw = Number(params.get("pageSize") ?? "20");
-    if (!Number.isInteger(pageSizeRaw) || pageSizeRaw < 1 || pageSizeRaw > 50) { problem(response, 400, "BAD_REQUEST", "pageSize must be between 1 and 50"); return; }
-    if (!q.trim() && !grade && !room) { json(response, 400, { error: "EMPTY_QUERY_NOT_ALLOWED" }); return; }
+    if (!Number.isInteger(pageSizeRaw) || pageSizeRaw < 1 || pageSizeRaw > 50) { await recordTelemetry({ eventName: "request_failed", severity: "warning", route: "/api/search", requestId, statusCode: 400, durationMs: Date.now() - startedAt, errorCode: "PAGE_SIZE_INVALID" }); problem(response, 400, "BAD_REQUEST", "pageSize must be between 1 and 50"); return; }
+    if (!q.trim() && !grade && !room) { await recordTelemetry({ eventName: "request_failed", severity: "warning", route: "/api/search", requestId, statusCode: 400, durationMs: Date.now() - startedAt, errorCode: "EMPTY_QUERY_NOT_ALLOWED" }); json(response, 400, { error: "EMPTY_QUERY_NOT_ALLOWED" }); return; }
     const key = publicClientKey(request);
     const decision = allowSearch(key);
-    if (!decision.allowed) { json(response, 429, { error: "RATE_LIMITED" }, { "retry-after": String(decision.retryAfter) }); return; }
+    if (!decision.allowed) { await recordTelemetry({ eventName: "rate_limited", severity: "warning", route: "/api/search", requestId, statusCode: 429, durationMs: Date.now() - startedAt }); json(response, 429, { error: "RATE_LIMITED" }, { "retry-after": String(decision.retryAfter) }); return; }
     const cursor = params.get("cursor");
     const result = await searchPublishedStudents({ q, ...(academicYear ? { academicYear } : {}), ...(grade ? { grade } : {}), ...(room ? { room } : {}), ...(status ? { status } : {}), ...(cursor ? { cursor } : {}), pageSize: pageSizeRaw });
     await supabaseAdmin().schema("directory").from("audit_events").insert({ event: "search_succeeded", actor_id: `public:${createHash("sha256").update(key).digest("hex").slice(0, 24)}`, outcome: "success", request_id: requestId, safe_metadata: { queryLength: q.length, resultCount: result.items.length } });
+    await recordTelemetry({ eventName: "request_completed", severity: "info", route: "/api/search", requestId, statusCode: 200, durationMs: Date.now() - startedAt, safeMetadata: { resultCount: result.items.length } });
     json(response, 200, result);
   } catch (error) {
     const code = error instanceof Error ? error.message : "SEARCH_UNAVAILABLE";
     const statusCode = code === "NO_ACTIVE_DATASET" ? 503 : code === "CURSOR_INVALID" ? 400 : 500;
     try { await supabaseAdmin().schema("directory").from("audit_events").insert({ event: "search_failed", actor_id: `public:${requestId}`, outcome: "failure", request_id: requestId, safe_metadata: { errorCode: code } }); } catch { /* audit failure must not leak details */ }
+    await recordTelemetry({ eventName: "request_failed", severity: statusCode >= 500 ? "error" : "warning", route: "/api/search", requestId, statusCode, durationMs: Date.now() - startedAt, errorCode: code === "NO_ACTIVE_DATASET" || code === "CURSOR_INVALID" ? code : "SEARCH_UNAVAILABLE" });
     if (code === "NO_ACTIVE_DATASET") { json(response, statusCode, { error: code }); return; }
     if (code === "CURSOR_INVALID") { json(response, statusCode, { error: code }); return; }
     problem(response, statusCode, "INTERNAL_ERROR");

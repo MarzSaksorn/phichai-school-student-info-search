@@ -29,6 +29,10 @@ Configure these Vercel **Environment Variables** for Preview and Production. Nev
 
 The deployed API surface is `GET /api/search`, `POST /api/admin/imports`, `GET /api/admin/imports/{jobId}`, `POST /api/admin/imports/{jobId}/publish`, and `POST /api/admin/versions/{versionId}/rollback`. Admin endpoints require a Supabase Auth bearer token whose `app_metadata.role` is one of `importer`, `publisher`, `operator`, or `owner`. The public endpoint never returns identifiers, source paths, raw values, or private metadata.
 
+Configure an uptime probe for `GET /api/health` every 60 seconds. HTTP 200 means the active dataset is present and fresh; HTTP 503 means the service is degraded or freshness cannot be verified. Configure `GET /api/admin/operations` as a protected operator check, not as a public uptime probe. It reports aggregate 15-minute search, import, publication, latency, and alert metrics.
+
+Structured `phichai_telemetry` records are emitted to Vercel logs and retained in the private Supabase `directory.observability_events` table. The monitoring implementation deliberately excludes search text, student values, identifiers, source paths, tokens, and stack traces. Thresholds and incident procedures are documented in [the monitoring runbook](./monitoring.md).
+
 ## Rollback
 
 If production verification or monitoring identifies a bad deployment, use Vercel's deployment history to promote the last known-good deployment, then revert or fix the corresponding commit on `main`. Do not force-push. If the defect affects directory data rather than code, use the dataset rollback workflow and preserve the audit trail.

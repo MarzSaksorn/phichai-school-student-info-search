@@ -3,9 +3,11 @@ import { validateWorkbook } from "../../../../apps/directory-worker/src/import/v
 import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../../../_lib/supabase.js";
+import { recordTelemetry } from "../../../_lib/telemetry.js";
 
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
+  const startedAt = Date.now();
   const actor = await authenticatedActor(bearerToken(request.headers));
   if (!actor) { problem(response, 401, "UNAUTHORIZED", "Publisher authentication is required"); return; }
   if (!["publisher", "owner"].includes(actor.role)) { problem(response, 403, "FORBIDDEN", "Publisher role is required"); return; }
@@ -37,5 +39,6 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (activateError || !active) { await client.schema("directory").from("dataset_versions").update({ status: "publish_failed" }).eq("id", created.id); problem(response, 500, "INTERNAL_ERROR"); return; }
   await client.schema("directory").from("import_jobs").update({ status: "published", published_version_id: created.id, updated_at: new Date().toISOString() }).eq("id", jobId);
   await client.schema("directory").from("audit_events").insert({ event: "publish_succeeded", actor_id: actor.id, actor_role: actor.role, job_id: jobId, dataset_version_id: created.id, outcome: "success", safe_metadata: { version, studentCount: job.accepted_row_count } });
+  await recordTelemetry({ eventName: "request_completed", severity: "info", route: "/api/admin/imports/:jobId/publish", statusCode: 200, durationMs: Date.now() - startedAt, safeMetadata: { studentCount: job.accepted_row_count } });
   json(response, 200, { data: active });
 }
