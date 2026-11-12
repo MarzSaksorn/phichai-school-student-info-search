@@ -67,6 +67,21 @@ describe("student workbook validation", () => {
     expect(result.issues.some((issue) => issue.message.includes("เด็กหญิง"))).toBe(false);
   });
 
+  it("keeps valid rows publishable when only individual rows are invalid", () => {
+    const result = validateWorkbook({
+      workbook: { ...workbook, sheets: [workbook.sheets[0]!] },
+      fileName: "students.xlsx",
+      academicYear: "2569",
+      sourceType: "approved_student_xlsx"
+    }, config);
+
+    expect(result.students).toHaveLength(1);
+    expect(result.blocking).toBe(false);
+    expect(result.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["DUPLICATE_IDENTIFIER", "BLANK_DISPLAY_NAME", "INVALID_GRADE", "INVALID_ROOM"])
+    );
+  });
+
   it("rejects academic-year mismatch and movement/staff source types", () => {
     const mismatch = validateWorkbook({
       workbook,

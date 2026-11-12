@@ -277,6 +277,9 @@ export function validateWorkbook(
   return {
     students,
     issues,
-    blocking: issues.some((item) => item.severity === "error")
+    // Row-level errors are retained as rejected rows but do not block a
+    // partial import. Workbook-level errors (which have no row number) still
+    // prevent publication because the mapping or source itself is invalid.
+    blocking: issues.some((item) => item.severity === "error" && item.rowNumber === undefined)
   };
 }
