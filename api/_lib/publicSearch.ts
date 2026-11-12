@@ -14,6 +14,42 @@ function clean(value: string): string { return value.normalize("NFKC").trim().re
 function cursorValue(cursor: string | undefined): number { if (!cursor) return 0; try { const offset = Number(Buffer.from(cursor, "base64url").toString("utf8")); if (!Number.isSafeInteger(offset) || offset < 0) throw new Error(); return offset; } catch { throw new Error("CURSOR_INVALID"); } }
 function cursorFor(offset: number): string { return Buffer.from(String(offset), "utf8").toString("base64url"); }
 
+const ROSTER_FETCH_PAGE = 1000;
+
+type RosterRow = {
+  public_id: string;
+  display_name: string;
+  student_identifier: string | null;
+  academic_year: string;
+  grade: string;
+  room: string;
+  status: string | null;
+};
+
+// The public roster is ordered ชั้น (grade) → ห้อง (room) → เลขประจำตัว (student
+// number) → ชื่อ (name). Rooms and student numbers are text columns, so the
+// comparison happens in code where "2" < "10" and "9" < "10" hold numerically;
+// the database cannot express these casts through the public query API.
+const gradeOrder = (grade: string): number => { const match = /^ม\.(\d+)$/u.exec(grade); return match ? Number(match[1]) : Number.POSITIVE_INFINITY; };
+const numericOrLast = (value: string | null): number => { if (value === null || value === "") return Number.POSITIVE_INFINITY; return /^\d+$/u.test(value) ? Number(value) : Number.POSITIVE_INFINITY; };
+const compareRosterRows = (a: RosterRow, b: RosterRow): number => {
+  const gradeA = gradeOrder(a.grade);
+  const gradeB = gradeOrder(b.grade);
+  if (gradeA !== gradeB) return gradeA - gradeB;
+  if (gradeA === Number.POSITIVE_INFINITY) { const gradeText = a.grade.localeCompare(b.grade, "th-TH"); if (gradeText !== 0) return gradeText; }
+  const roomA = numericOrLast(a.room);
+  const roomB = numericOrLast(b.room);
+  if (roomA !== roomB) return roomA - roomB;
+  if (roomA === Number.POSITIVE_INFINITY) { const roomText = a.room.localeCompare(b.room, "th-TH"); if (roomText !== 0) return roomText; }
+  const numberA = numericOrLast(a.student_identifier);
+  const numberB = numericOrLast(b.student_identifier);
+  if (numberA !== numberB) return numberA - numberB;
+  if (numberA === Number.POSITIVE_INFINITY && a.student_identifier !== null && b.student_identifier !== null) { const numberText = a.student_identifier.localeCompare(b.student_identifier, "th-TH"); if (numberText !== 0) return numberText; }
+  const name = a.display_name.localeCompare(b.display_name, "th-TH");
+  if (name !== 0) return name;
+  return a.public_id.localeCompare(b.public_id);
+};
+
 export async function searchPublishedStudents(input: PublicSearchInput): Promise<PublicSearchOutput> {
   const q = clean(input.q).toLocaleLowerCase("th-TH");
   const offset = cursorValue(input.cursor);
@@ -33,11 +69,10 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
   let query = supabaseAdmin()
     .schema("directory")
     .from("published_student_records")
-    .select("public_id,display_name,student_identifier,academic_year,grade,room,status", { count: "exact" })
+    .select("public_id,display_name,student_identifier,academic_year,grade,room,status")
     .eq("dataset_version_id", active.id)
     .not("display_name", "ilike", "%ณ วันที่%")
     .not("display_name", "ilike", "%จำนวนนักเรียน%")
-    .order("display_name", { ascending: true })
     .order("public_id", { ascending: true });
   // Number lookup is available only when the active version's approved field config allows it.
   if (searchStudentNumber && /^\d{1,12}$/u.test(q)) query = query.eq("student_identifier", q);
@@ -46,15 +81,26 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
   if (input.grade) query = query.eq("grade", clean(input.grade));
   if (input.room) query = query.eq("room", clean(input.room));
   if (input.status) query = query.eq("status", clean(input.status));
-  const { data, error, count } = await query.range(offset, offset + input.pageSize - 1);
-  if (error) throw new Error("SEARCH_UNAVAILABLE");
+  // Fetch every row matching the request filters (paged for the query API's row
+  // limit), then order the full match set so every page follows one roster order.
+  const rows: RosterRow[] = [];
+  for (let fetchOffset = 0; ; fetchOffset += ROSTER_FETCH_PAGE) {
+    const { data, error } = await query.range(fetchOffset, fetchOffset + ROSTER_FETCH_PAGE - 1);
+    if (error) throw new Error("SEARCH_UNAVAILABLE");
+    const page = (data ?? []) as RosterRow[];
+    rows.push(...page);
+    if (page.length < ROSTER_FETCH_PAGE) break;
+  }
   const publishedAt = active.published_at ?? active.created_at;
-  const items = (data ?? [])
+  const roster = rows
     .filter((row) => !SUMMARY_NOTE_PATTERN.test(String(row.display_name ?? "")))
+    .sort(compareRosterRows);
+  const total = roster.length;
+  const items = roster
+    .slice(offset, offset + input.pageSize)
     .map((row) => ({ publicId: row.public_id, recordType: "student" as const, displayName: row.display_name, ...(showStudentNumber && row.student_identifier ? { studentNumber: String(row.student_identifier) } : {}), academicYear: row.academic_year, grade: row.grade, room: row.room, ...(row.status ? { status: row.status } : {}), publishedAt }));
-  const total = count ?? items.length;
   const result: PublicSearchOutput = { items, total, datasetVersion: active.version, publishedAt };
-  if (count !== null && offset + items.length < count) result.nextCursor = cursorFor(offset + items.length);
+  if (offset + items.length < total) result.nextCursor = cursorFor(offset + items.length);
   return result;
 }
 
