@@ -30,9 +30,10 @@ type HeaderMap = {
   grade: number;
   room: number;
   status?: number;
+  surname?: number;
 };
 
-const aliases: Record<keyof HeaderMap, string[]> = {
+const aliases: Record<"identifier" | "name" | "grade" | "room" | "status", string[]> = {
   identifier: ["รหัส", "รหัสนักเรียน", "รหัสประจำตัว", "เลขประจำตัว", "student_id", "studentidentifier"],
   name: ["ชื่อ", "ชื่อ-สกุล", "ชื่อสกุล", "name", "display_name"],
   grade: ["ชั้น", "ระดับชั้น", "grade"],
@@ -66,12 +67,14 @@ function mapHeaders(header: unknown[], config: ImportSchemaConfig): HeaderMap | 
   const room = config.deriveRoomFromSheet ? -1 : headerIndex(header, aliases.room);
   if (name < 0 || (grade < 0 && !config.deriveGradeFromFilename) || (room < 0 && !config.deriveRoomFromSheet)) return undefined;
   const status = headerIndex(header, aliases.status);
+  const surname = config.surnameHeader ? headerIndex(header, [config.surnameHeader]) : -1;
   return {
     identifier,
     name,
     grade,
     room,
-    ...(status >= 0 ? { status } : {})
+    ...(status >= 0 ? { status } : {}),
+    ...(surname >= 0 ? { surname } : {})
   };
 }
 
@@ -86,12 +89,31 @@ function isBlankRow(row: unknown[]): boolean {
   return row.every((value) => normalizeSafeText(value === null || value === undefined ? null : String(value)) === "");
 }
 
+const SUMMARY_NOTE_PATTERN = /ณ\s*วันที่|จำนวนนักเรียน|นักเรียนทั้งหมด|รวมทั้งสิ้น|ลงชื่อ/u;
+
+function isSummaryNote(value: string | null): boolean {
+  return value !== null && SUMMARY_NOTE_PATTERN.test(value);
+}
+
 function isAuxiliaryRow(row: unknown[], mapped: HeaderMap): boolean {
   const displayName = cell(row, mapped.name);
-  if (displayName) return false;
   const serialNumber = cell(row, 0);
   const identifier = cell(row, mapped.identifier);
+  // ExcelJS copies a merged cell's value into every cell of the merged range, so the
+  // footer note merged across B:G also lands in the name column. Detect the note
+  // signature before trusting that column, otherwise the footer is imported as a student.
+  if (isSummaryNote(displayName) || isSummaryNote(identifier)) return true;
+  if (displayName) return false;
   return !serialNumber || identifier?.startsWith("ณ วันที่") === true;
+}
+
+// The approved workbook keeps the given name and the family name in separate
+// columns, so a published name must join them or every student shows a first
+// name only (and homonyms become indistinguishable).
+function composeDisplayName(givenName: string | null, surname: string | null): string | null {
+  const familyName = surname?.trim() ?? "";
+  if (!givenName || !familyName || givenName.endsWith(familyName)) return givenName;
+  return `${givenName} ${familyName}`;
 }
 
 export function validateWorkbook(
@@ -169,7 +191,10 @@ export function validateWorkbook(
       if (isAuxiliaryRow(row, mapped)) continue;
       const rowIssueStart = issues.length;
       const source: StudentSourceRow = {
-        displayName: cell(row, mapped.name),
+        displayName: composeDisplayName(
+          cell(row, mapped.name),
+          mapped.surname === undefined ? null : cell(row, mapped.surname)
+        ),
         grade: derivedGrade ?? cell(row, mapped.grade),
         room: config.deriveRoomFromSheet ? normalizedSheetName : cell(row, mapped.room),
         ...(mapped.identifier >= 0 ? { studentIdentifier: cell(row, mapped.identifier) } : {}),

@@ -59,9 +59,11 @@ describe("public search service", () => {
     expect(second.items[0]?.publicId).not.toBe(first.items[0]?.publicId);
   });
 
-  it("rejects empty enumeration but permits a narrowing grade query", async () => {
+  it("lists the whole roster when no query is supplied", async () => {
     const { service } = await seeded();
-    await expect(service.searchDirectory({ query: "", pageSize: 10 })).rejects.toMatchObject({ code: "EMPTY_QUERY_NOT_ALLOWED" });
+    const roster = await service.searchDirectory({ query: "", pageSize: 10 });
+    expect(roster.items).toHaveLength(records.length);
+    expect(roster.items.every((item) => item.displayName.length > 0)).toBe(true);
     const narrowed = await service.searchDirectory({ query: "", filters: { grade: "ม.2" }, pageSize: 10 });
     expect(narrowed.items).toHaveLength(1);
   });

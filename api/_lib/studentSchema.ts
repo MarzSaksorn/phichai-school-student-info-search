@@ -16,6 +16,7 @@ export const studentXlsxSchema: ImportSchemaConfig = {
   roomPattern: /^\d{1,2}$/u,
   headerRow: 5,
   displayNameHeader: "ชื่อ-สกุล",
+  surnameHeader: "สกุล",
   deriveGradeFromFilename,
   deriveRoomFromSheet: true
 };
