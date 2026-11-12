@@ -87,7 +87,11 @@ function isBlankRow(row: unknown[]): boolean {
 }
 
 function isAuxiliaryRow(row: unknown[], mapped: HeaderMap): boolean {
-  return !cell(row, mapped.name) && !cell(row, 0);
+  const displayName = cell(row, mapped.name);
+  if (displayName) return false;
+  const serialNumber = cell(row, 0);
+  const identifier = cell(row, mapped.identifier);
+  return !serialNumber || identifier?.startsWith("ณ วันที่") === true;
 }
 
 export function validateWorkbook(
