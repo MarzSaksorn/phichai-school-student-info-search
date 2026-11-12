@@ -205,11 +205,22 @@
       let nextCursor = '';
       let latestRequest = 0;
       let rendered = 0;
+      let inFlight = null;
+      const PAGE_SIZE = '24';
+      const CACHE_TTL_MS = 60000;
+      const CACHE_LIMIT = 32;
+      const LOAD_AHEAD_PX = 600;
+      // Session-only, bounded in-memory cache. It is deliberately not persisted to
+      // localStorage or IndexedDB, and every key contains the exact query, filters,
+      // cursor, and page size so different searches never share a response.
+      const pageCache = new Map();
+      let activeDatasetVersion = '';
+      const loadSentinel = loadMore.parentElement || loadMore;
 
       const setStatus = (message, tone = '') => { statusLine.textContent = message; statusLine.dataset.tone = tone; };
       const getFilters = () => ({ q: queryInput.value.trim(), academicYear: document.querySelector('#academic-year').value, grade: document.querySelector('#grade').value, room: document.querySelector('#room').value, status: document.querySelector('#status').value });
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-      const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; loadMore.hidden = true; };
+      const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; nextCursor = ''; loadMore.hidden = true; resultRegion.removeAttribute('aria-busy'); };
       const card = (item, index) => '<article class="result-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (item.status ? '<span class="result-status">' + escapeHtml(item.status) + '</span>' : '') + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>';
       const renderCards = (items, append = false) => {
         if (!append && items.length === 0) { renderEmpty('ไม่พบชื่อที่ตรงกัน', 'ลองพิมพ์ชื่อบางส่วน หรือเลือกชั้นเรียนใหม่'); return; }
@@ -218,27 +229,76 @@
         if (append) resultRegion.insertAdjacentHTML('beforeend', '<div class="result-grid">' + html + '</div>'); else resultRegion.innerHTML = '<div class="result-grid">' + html + '</div>';
         rendered = start + items.length;
       };
+      const readCachedPage = (key) => {
+        const entry = pageCache.get(key);
+        if (!entry) return null;
+        if (Date.now() - entry.cachedAt >= CACHE_TTL_MS) { pageCache.delete(key); return null; }
+        // Refresh insertion order so the most recently viewed pages stay in the
+        // bounded cache while older pages are evicted first.
+        pageCache.delete(key); pageCache.set(key, entry);
+        return entry.body;
+      };
+      const writeCachedPage = (key, body, cachedAt = Date.now()) => {
+        const version = String(body.datasetVersion || '');
+        // Publishing a new roster changes page contents and cursors, so no page
+        // from an older dataset may be reused once a newer version is observed.
+        if (activeDatasetVersion && version && activeDatasetVersion !== version) pageCache.clear();
+        if (version) activeDatasetVersion = version;
+        pageCache.delete(key);
+        if (pageCache.size >= CACHE_LIMIT) pageCache.delete(pageCache.keys().next().value);
+        pageCache.set(key, { body, cachedAt });
+      };
+      const applyResult = (body, filters, append) => {
+        const items = body.items || [];
+        renderCards(items, append); nextCursor = body.nextCursor || ''; loadMore.hidden = !nextCursor;
+        const total = Number(body.total || items.length);
+        const year = (items[0] && items[0].academicYear) || filters.academicYear || '';
+        resultCount.innerHTML = '<strong>' + total.toLocaleString('th-TH') + '</strong> คน' + (year ? ' · ปีการศึกษา ' + escapeHtml(year) : '');
+        if (artStats) artStats.textContent = total.toLocaleString('th-TH') + ' NAMES';
+        setStatus(filters.q ? 'พบ ' + total.toLocaleString('th-TH') + ' รายการที่ตรงกับคำค้น' : 'แสดงรายชื่อทั้งหมด ' + total.toLocaleString('th-TH') + ' คน', 'success');
+        resultRegion.removeAttribute('aria-busy');
+      };
+      const schedulePrefetch = () => {
+        // A warm page should arrive just before the user reaches the pagination
+        // control. Layout positions keep this bounded: once the control moves
+        // below the preload margin, no further pages are fetched until needed.
+        if (!nextCursor || inFlight || loadMore.hidden) return;
+        if (loadSentinel.getBoundingClientRect().top < window.innerHeight + LOAD_AHEAD_PX) search(true);
+      };
       const search = async (append = false) => {
+        if (inFlight) {
+          if (append) return;
+          inFlight.abort();
+        }
+        if (append && !nextCursor) return;
         const requestId = ++latestRequest; const filters = getFilters();
         if (!append) rendered = 0;
-        setStatus(append ? 'กำลังโหลดรายชื่อเพิ่มเติม…' : 'กำลังค้นหารายชื่อ…'); if (!append) resultRegion.innerHTML = '<div class="empty-state"><h3>กำลังค้นหา</h3><p>กำลังตรวจสอบรายชื่อที่เผยแพร่ล่าสุด</p></div>';
-        const params = new URLSearchParams({ q: filters.q, pageSize: '24' }); ['academicYear', 'grade', 'room', 'status'].forEach((key) => { if (filters[key]) params.set(key, filters[key]); }); if (append && nextCursor) params.set('cursor', nextCursor);
+        const params = new URLSearchParams({ q: filters.q, pageSize: PAGE_SIZE }); ['academicYear', 'grade', 'room', 'status'].forEach((key) => { if (filters[key]) params.set(key, filters[key]); }); if (append && nextCursor) params.set('cursor', nextCursor);
+        const cacheKey = params.toString();
+        const cached = readCachedPage(cacheKey);
+        if (cached) { applyResult(cached, filters, append); schedulePrefetch(); return; }
+        setStatus(append ? 'กำลังโหลดรายชื่อเพิ่มเติม…' : 'กำลังค้นหารายชื่อ…'); if (!append) resultRegion.innerHTML = '<div class="empty-state"><h3>กำลังค้นหา</h3><p>กำลังตรวจสอบรายชื่อที่เผยแพร่ล่าสุด</p></div>'; else resultRegion.setAttribute('aria-busy', 'true');
+        const controller = new AbortController();
+        inFlight = controller;
         try {
-          const response = await fetch('/api/search?' + params.toString(), { headers: { accept: 'application/json' } });
+          const response = await fetch('/api/search?' + cacheKey, { headers: { accept: 'application/json' }, signal: controller.signal });
           const body = await response.json(); if (requestId !== latestRequest) return;
           if (!response.ok) { const messages = { NO_ACTIVE_DATASET: 'ขณะนี้ยังไม่มีรายชื่อที่เผยแพร่', RATE_LIMITED: 'ค้นหาถี่เกินไป กรุณารอสักครู่แล้วลองใหม่' }; renderEmpty('ยังแสดงรายชื่อไม่ได้ในขณะนี้', messages[body.error] || 'ระบบค้นหาไม่พร้อมใช้งานชั่วคราว'); setStatus(messages[body.error] || 'ระบบค้นหาไม่พร้อมใช้งานชั่วคราว', 'error'); return; }
-          const items = body.items || [];
-          renderCards(items, append); nextCursor = body.nextCursor || ''; loadMore.hidden = !nextCursor;
-          const total = Number(body.total || items.length);
-          const year = (items[0] && items[0].academicYear) || filters.academicYear || '';
-          resultCount.innerHTML = '<strong>' + total.toLocaleString('th-TH') + '</strong> คน' + (year ? ' · ปีการศึกษา ' + escapeHtml(year) : '');
-          if (artStats) artStats.textContent = total.toLocaleString('th-TH') + ' NAMES';
-          setStatus(filters.q ? 'พบ ' + total.toLocaleString('th-TH') + ' รายการที่ตรงกับคำค้น' : 'แสดงรายชื่อทั้งหมด ' + total.toLocaleString('th-TH') + ' คน', 'success');
-        } catch { renderEmpty('เชื่อมต่อระบบค้นหาไม่ได้', 'กรุณาตรวจสอบการเชื่อมต่อ แล้วลองใหม่อีกครั้ง'); setStatus('ไม่สามารถเชื่อมต่อระบบค้นหาได้', 'error'); }
+          writeCachedPage(cacheKey, body);
+          applyResult(body, filters, append);
+        } catch (error) { if (requestId !== latestRequest || (error && error.name === 'AbortError')) return; renderEmpty('เชื่อมต่อระบบค้นหาไม่ได้', 'กรุณาตรวจสอบการเชื่อมต่อ แล้วลองใหม่อีกครั้ง'); setStatus('ไม่สามารถเชื่อมต่อระบบค้นหาได้', 'error'); }
+        finally { if (inFlight === controller) inFlight = null; }
+        schedulePrefetch();
       };
       const syncChips = () => { const grade = document.querySelector('#grade').value; document.querySelectorAll('.grade-chips [data-filter]').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.value === grade))); };
       form.addEventListener('submit', (event) => { event.preventDefault(); nextCursor = ''; search(false); });
       loadMore.addEventListener('click', () => search(true));
+      if ('IntersectionObserver' in window) {
+        // The button remains the keyboard-accessible fallback. Scrolling the
+        // pagination area near the viewport simply invokes the same guarded path.
+        const observer = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) search(true); }, { rootMargin: '0px 0px ' + LOAD_AHEAD_PX + 'px 0px' });
+        observer.observe(loadSentinel);
+      }
       document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelector('#grade').value = button.dataset.value; syncChips(); nextCursor = ''; search(false); }));
       document.querySelectorAll('#academic-year, #room, #status').forEach((select) => select.addEventListener('change', () => { nextCursor = ''; search(false); }));
       let debounce = 0;
