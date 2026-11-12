@@ -26,12 +26,23 @@ type RosterRow = {
   status: string | null;
 };
 
-// The public roster is ordered ชั้น (grade) → ห้อง (room) → เลขประจำตัว (student
-// number) → ชื่อ (name). Rooms and student numbers are text columns, so the
-// comparison happens in code where "2" < "10" and "9" < "10" hold numerically;
-// the database cannot express these casts through the public query API.
+// The public roster is ordered ชั้น (grade) → ห้อง (room) → เพศ (sex, ชายก่อนหญิง)
+// → เลขประจำตัว (student number) → ชื่อ (name). Rooms and student numbers are
+// text columns, so the comparison happens in code where "2" < "10" and
+// "9" < "10" hold numerically; the database cannot express these casts through
+// the public query API.
 const gradeOrder = (grade: string): number => { const match = /^ม\.(\d+)$/u.exec(grade); return match ? Number(match[1]) : Number.POSITIVE_INFINITY; };
 const numericOrLast = (value: string | null): number => { if (value === null || value === "") return Number.POSITIVE_INFINITY; return /^\d+$/u.test(value) ? Number(value) : Number.POSITIVE_INFINITY; };
+// Sex comes from the public name title (เด็กชาย/นาย vs เด็กหญิง/นางสาว/นาง) —
+// there is no separate column in the approved dataset, and approved workbooks
+// write the title with or without a space. Unknown titles are placed after both
+// groups so the male → female split stays clean.
+const sexOrder = (displayName: string): number => {
+  const name = displayName.normalize("NFKC").trim();
+  if (/^(?:เด็กชาย|นักเรียนชาย|นาย|ชาย)/u.test(name)) return 0;
+  if (/^(?:เด็กหญิง|นักเรียนหญิง|นางสาว|นาง|หญิง)/u.test(name)) return 1;
+  return 2;
+};
 const compareRosterRows = (a: RosterRow, b: RosterRow): number => {
   const gradeA = gradeOrder(a.grade);
   const gradeB = gradeOrder(b.grade);
@@ -41,6 +52,8 @@ const compareRosterRows = (a: RosterRow, b: RosterRow): number => {
   const roomB = numericOrLast(b.room);
   if (roomA !== roomB) return roomA - roomB;
   if (roomA === Number.POSITIVE_INFINITY) { const roomText = a.room.localeCompare(b.room, "th-TH"); if (roomText !== 0) return roomText; }
+  const sex = sexOrder(a.display_name) - sexOrder(b.display_name);
+  if (sex !== 0) return sex;
   const numberA = numericOrLast(a.student_identifier);
   const numberB = numericOrLast(b.student_identifier);
   if (numberA !== numberB) return numberA - numberB;
