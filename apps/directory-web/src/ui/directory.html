@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="ค้นหาข้อมูลนักเรียนโรงเรียนพิชัยจากข้อมูลที่โรงเรียนอนุมัติ">
   <title>ค้นหาข้อมูลนักเรียน · โรงเรียนพิชัย</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
+      --font-display: "IBM Plex Sans Thai", "Noto Sans Thai UI SemiCondensed", sans-serif;
+      --font-ui: "Noto Sans Thai UI SemiCondensed", "Noto Sans Thai UI", "IBM Plex Sans Thai", sans-serif;
       --canvas: #ffffff;
       --ink: #17151f;
       --muted: #6f6b78;
@@ -29,12 +34,14 @@
       margin: 0;
       background: var(--canvas);
       color: var(--ink);
-      font-family: "Mona Sans", "Noto Sans Thai", "Leelawadee UI", sans-serif;
+      font-family: var(--font-ui);
+      font-weight: 300;
       font-size: 16px;
       line-height: 1.55;
     }
     a { color: inherit; }
     button, input, select { font: inherit; }
+    h1, h2, h3, button, input, select, .wordmark, .header-nav { font-family: var(--font-display); }
     button { cursor: pointer; }
     :focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
     .skip-link {
