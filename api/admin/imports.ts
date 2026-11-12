@@ -4,6 +4,7 @@ import type { IncomingMessage } from "node:http";
 import type { ImportSchemaConfig } from "../../apps/directory-worker/src/import/schemaRules.js";
 import type { ApiRequest, ApiResponse } from "../_lib/http.js";
 import { bearerToken, json, method, problem } from "../_lib/http.js";
+import { clientImportJob } from "../_lib/adminView.js";
 import { authenticatedActor, supabaseAdmin } from "../_lib/supabase.js";
 import { STUDENT_XLSX_MAPPING_VERSION, studentXlsxSchema } from "../_lib/studentSchema.js";
 import { recordTelemetry } from "../_lib/telemetry.js";
@@ -26,8 +27,6 @@ function parseMultipart(request: IncomingMessage): Promise<Upload> {
     request.pipe(parser);
   });
 }
-
-function safeJob(job: Record<string, unknown>): Record<string, unknown> { const { uploader_id: _uploaderId, ...publicJob } = job; return publicJob; }
 
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
@@ -58,7 +57,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     if (updateError || !job) throw new Error("DATABASE_ERROR");
     await client.schema("directory").from("audit_events").insert({ event: "upload", actor_id: actor.id, actor_role: actor.role, job_id: jobId, outcome: "success", safe_metadata: { byteSize: upload.bytes.byteLength, sheetCount: workbook.sheets.length } });
     await recordTelemetry({ eventName: "request_completed", severity: "info", route: "/api/admin/imports", statusCode: 201, durationMs: Date.now() - startedAt, safeMetadata: { byteSize: upload.bytes.byteLength, rowCount: workbook.sheets.reduce((total, sheet) => total + sheet.rows.length, 0) } });
-    json(response, 201, { job: safeJob(job), sourceFile: { id: sourceFileId, fileName: upload.filename, byteSize: upload.bytes.byteLength, academicYear: upload.academicYear, sourceType: upload.sourceType, checksumSha256: checksum }, fileId: sourceFileId, checksum, sheetNames: workbook.sheets.map((sheet) => sheet.name), rowCount: workbook.sheets.reduce((total, sheet) => total + sheet.rows.length, 0) });
+    json(response, 201, { job: clientImportJob(job), sourceFile: { id: sourceFileId, fileName: upload.filename, byteSize: upload.bytes.byteLength, academicYear: upload.academicYear, sourceType: upload.sourceType, checksumSha256: checksum }, fileId: sourceFileId, checksum, sheetNames: workbook.sheets.map((sheet) => sheet.name), rowCount: workbook.sheets.reduce((total, sheet) => total + sheet.rows.length, 0) });
   } catch (error) {
     try { await client.storage.from("directory-raw").remove([storagePath]); } catch { /* best-effort compensation */ }
     try { await client.schema("directory").from("import_jobs").update({ status: "rejected", blocking: true, updated_at: new Date().toISOString() }).eq("id", jobId); } catch { /* best-effort compensation */ }

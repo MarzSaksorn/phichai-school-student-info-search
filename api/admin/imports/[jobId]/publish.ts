@@ -1,4 +1,5 @@
 import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
+import { clientDatasetVersion } from "../../../_lib/adminView.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../../../_lib/supabase.js";
 import { studentXlsxSchema } from "../../../_lib/studentSchema.js";
@@ -41,5 +42,5 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   await client.schema("directory").from("import_jobs").update({ status: "published", published_version_id: created.id, updated_at: new Date().toISOString() }).eq("id", jobId);
   await client.schema("directory").from("audit_events").insert({ event: "publish_succeeded", actor_id: actor.id, actor_role: actor.role, job_id: jobId, dataset_version_id: created.id, outcome: "success", safe_metadata: { version, studentCount: job.accepted_row_count } });
   await recordTelemetry({ eventName: "request_completed", severity: "info", route: "/api/admin/imports/:jobId/publish", statusCode: 200, durationMs: Date.now() - startedAt, safeMetadata: { studentCount: job.accepted_row_count } });
-  json(response, 200, { data: active });
+  json(response, 200, { data: clientDatasetVersion(active) });
 }
