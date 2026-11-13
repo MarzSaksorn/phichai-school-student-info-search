@@ -63,7 +63,8 @@
     .header-nav a:hover { color: var(--ink); }
     .header-note { color: var(--pink); font-size: 13px; font-weight: 700; }
     .theme-switch { display: inline-flex; align-items: center; flex: 0 0 auto; }
-    .theme-switch .daisy-toggle { width: 42px; min-width: 42px; height: 24px; min-height: 24px; padding: 3px; border-color: var(--border); opacity: 1; visibility: visible; }
+    .theme-switch .daisy-toggle { width: 42px; min-width: 42px; height: 24px; min-height: 24px; padding: 3px; border-color: var(--border); background-color: var(--surface); color: var(--muted); opacity: 1; visibility: visible; }
+    .theme-switch .daisy-toggle:checked { background-color: var(--pink); color: var(--canvas); }
 
     .page-shell { max-width: 1240px; margin: 0 auto; padding: 0 32px 72px; }
     .hero { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr); gap: clamp(44px, 8vw, 104px); align-items: center; padding: 64px 0 78px; }
