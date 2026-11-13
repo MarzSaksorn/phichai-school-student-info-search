@@ -23,4 +23,4 @@ await new Promise((resolvePromise, reject) => {
 
 await writeFile(resolve(output, "index.html"), template, "utf8");
 await writeFile(resolve(adminOutput, "index.html"), adminTemplate, "utf8");
-await writeFile(resolve(output, "manus-routes.json"), JSON.stringify({ routes: [{ path: "/", title: "ค้นหาข้อมูลนักเรียน · โรงเรียนพิชัย" }, { path: "/admin", title: "ผู้ดูแลระบบ · สารบบโรงเรียนพิชัย", protected: true }] }) + "\n", "utf8");
+await writeFile(resolve(output, "manus-routes.json"), JSON.stringify({ routes: [{ path: "/", title: "STDPhichai Search, หานักเรียนพิชัย" }, { path: "/admin", title: "ผู้ดูแลระบบ · สารบบโรงเรียนพิชัย", protected: true }] }) + "\n", "utf8");
