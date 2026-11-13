@@ -18,6 +18,8 @@ describe("public directory UI v0", () => {
     expect(source).toContain('<img class="wordmark-mark" src="/assets/logo-phicha.png"');
     expect(source).toContain("© 2026 For Educational Only");
     expect(source).toContain("นาย ศักย์ศรณ์ งานดี ม.4/2 · ปีการศึกษา 2569");
+    expect(source).toContain("h1 { max-width: 650px; margin: 0; font-family: var(--font-ui);");
+    expect(source).toContain(".art-title { max-width: 320px; margin: 0; font-family: var(--font-display);");
     expect(source).toContain('href="#main-content"');
     expect(source).toContain('id="main-content"');
     expect(source).toContain('aria-label="ส่วนหัวเว็บไซต์"');
