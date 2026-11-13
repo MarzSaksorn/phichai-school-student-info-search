@@ -1,3 +1,5 @@
+# Coded by Manus AI
+
 # Phichai School Global Directory Search
 
 Thai-first global student and staff directory search for Phichai School.
