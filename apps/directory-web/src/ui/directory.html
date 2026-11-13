@@ -299,7 +299,7 @@
         observer.observe(loadSentinel);
       }
       document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelector('#grade').value = button.dataset.value; syncChips(); nextCursor = ''; search(false); }));
-      document.querySelectorAll('#academic-year, #room, #status').forEach((select) => select.addEventListener('change', () => { nextCursor = ''; search(false); }));
+      document.querySelectorAll('#academic-year, #grade, #room, #status').forEach((select) => select.addEventListener('change', () => { if (select.id === 'grade') syncChips(); nextCursor = ''; search(false); }));
       let debounce = 0;
       queryInput.addEventListener('input', () => { window.clearTimeout(debounce); debounce = window.setTimeout(() => { nextCursor = ''; search(false); }, 320); });
       syncChips();
