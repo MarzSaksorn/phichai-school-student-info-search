@@ -14,8 +14,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain('<meta property="og:type" content="website">');
     expect(source).toContain('<meta property="og:url" content="https://pcfind.avoonger.party/">');
     expect(source).toContain('<meta name="twitter:card" content="summary">');
-    expect(source).toContain('<link rel="icon" type="image/png" href="/favicon.png">');
-    expect(source).toContain('<img class="wordmark-mark" src="/assets/logo-phicha.png"');
+    expect(source).not.toContain('<link rel="icon" type="image/png" href="/favicon.png">');
+    expect(source).not.toContain('/assets/logo-phicha.png');
+    expect(source).toContain('<span class="wordmark-mark" aria-hidden="true">S</span>');
     expect(source).toContain("© 2026 นาย ศักย์ศรณ์ งานดี ม.4/2 · ปีการศึกษา 2569");
     expect(source).toContain("Educational use only. No commercial use, resale, paid service, or monetization permitted.");
     expect(source).toContain("h1 { max-width: 650px; margin: 0; font-family: var(--font-ui);");
