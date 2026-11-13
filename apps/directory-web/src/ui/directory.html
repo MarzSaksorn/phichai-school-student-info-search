@@ -105,7 +105,7 @@
     .filter-select { width: 100%; min-height: 45px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--ink); }
     .popular-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 0; color: var(--muted); font-size: 13px; }
     .popular-links button { padding: 0; border: 0; background: none; color: var(--pink); font-weight: 700; }
-    .grade-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+    .grade-chips { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 0; }
     .grade-chips > span { color: var(--muted); font-size: 13px; margin-right: 4px; }
     .chip { min-height: 38px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; transition: background 160ms ease, color 160ms ease, border-color 160ms ease; }
     .chip:hover { border-color: #d7d2dc; background: var(--pink-soft); }
@@ -114,9 +114,9 @@
     .status-line[data-tone="error"] { color: var(--error); }
     .status-line[data-tone="success"] { color: #3e5f00; }
 
-    .results-header { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin: 44px 0 18px; }
+    .results-header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; margin: 44px 0 18px; }
     .results-header h2 { margin: 0; font-size: 24px; letter-spacing: -.035em; }
-    .result-count { color: var(--muted); font-size: 13px; }
+    .result-count { color: var(--muted); font-size: 13px; text-align: right; }
     .result-count strong { color: var(--ink); font-size: 15px; }
     .result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .result-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 168px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: #fff; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; animation: card-in 300ms both; }
@@ -179,13 +179,12 @@
             <label class="filter-label" for="room">ห้องเรียน<select id="room" class="filter-select" name="room"><option value="">ทุกห้อง</option><option value="1">ห้อง 1</option><option value="2">ห้อง 2</option><option value="3">ห้อง 3</option><option value="4">ห้อง 4</option><option value="5">ห้อง 5</option><option value="6">ห้อง 6</option><option value="7">ห้อง 7</option><option value="8">ห้อง 8</option><option value="9">ห้อง 9</option><option value="10">ห้อง 10</option><option value="11">ห้อง 11</option><option value="12">ห้อง 12</option></select></label>
             <label class="filter-label" for="status">สถานะ<select id="status" class="filter-select" name="status"><option value="">ทุกสถานะ</option><option value="ปกติ">ปกติ</option><option value="ย้าย">ย้าย</option></select></label>
           </div>
-          <div class="grade-chips" aria-label="ตัวกรองชั้นเรียนด่วน"><span>ดูตามชั้น:</span><button class="chip" type="button" data-filter="grade" data-value="" aria-pressed="true">ทั้งหมด</button><button class="chip" type="button" data-filter="grade" data-value="ม.1" aria-pressed="false">ม.1</button><button class="chip" type="button" data-filter="grade" data-value="ม.2" aria-pressed="false">ม.2</button><button class="chip" type="button" data-filter="grade" data-value="ม.3" aria-pressed="false">ม.3</button><button class="chip" type="button" data-filter="grade" data-value="ม.4" aria-pressed="false">ม.4</button><button class="chip" type="button" data-filter="grade" data-value="ม.5" aria-pressed="false">ม.5</button><button class="chip" type="button" data-filter="grade" data-value="ม.6" aria-pressed="false">ม.6</button></div>
           <p id="status-line" class="status-line" role="status" aria-live="polite">พร้อมแสดงรายชื่อนักเรียนที่เผยแพร่แล้ว</p>
         </form>
       </section>
 
       <section id="results" aria-labelledby="results-title">
-        <div class="results-header"><h2 id="results-title">รายชื่อนักเรียน</h2><span id="result-count" class="result-count">กำลังโหลดรายชื่อ…</span></div>
+        <div class="results-header"><h2 id="results-title">รายชื่อนักเรียน</h2><div class="grade-chips" aria-label="ตัวกรองชั้นเรียนด่วน"><span>ดูตามชั้น:</span><button class="chip" type="button" data-filter="grade" data-value="" aria-pressed="true">ทั้งหมด</button><button class="chip" type="button" data-filter="grade" data-value="ม.1" aria-pressed="false">ม.1</button><button class="chip" type="button" data-filter="grade" data-value="ม.2" aria-pressed="false">ม.2</button><button class="chip" type="button" data-filter="grade" data-value="ม.3" aria-pressed="false">ม.3</button><button class="chip" type="button" data-filter="grade" data-value="ม.4" aria-pressed="false">ม.4</button><button class="chip" type="button" data-filter="grade" data-value="ม.5" aria-pressed="false">ม.5</button><button class="chip" type="button" data-filter="grade" data-value="ม.6" aria-pressed="false">ม.6</button></div><span id="result-count" class="result-count">กำลังโหลดรายชื่อ…</span></div>
         <div id="result-region"><div class="empty-state"><h3>กำลังโหลดรายชื่อ</h3><p>ระบบกำลังดึงรายชื่อนักเรียนที่เผยแพร่ล่าสุด</p></div></div>
         <div class="load-more"><button id="load-more" class="secondary-button" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
       </section>
