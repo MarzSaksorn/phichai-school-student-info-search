@@ -24,6 +24,8 @@ describe("public directory UI v0", () => {
     expect(source).not.toContain("--border: var(--color-base-300)");
     expect(source).toContain("theme-controller");
     expect(source).toContain("daisy-toggle-primary");
+    expect(source).toContain('class="theme-switch daisy-toggle daisy-toggle-sm daisy-toggle-primary"');
+    expect(source).toContain('aria-hidden="true"');
     expect(source).toContain('id="theme-toggle"');
     expect(source).toContain("phichai-dark");
     expect(source).toContain("daisy-dropdown-content daisy-menu");
