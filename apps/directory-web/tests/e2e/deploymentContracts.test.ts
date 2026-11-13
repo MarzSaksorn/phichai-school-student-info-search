@@ -58,6 +58,10 @@ describe("deployment contracts", () => {
     expect(read("apps/directory-web/dist/sitemap.xml")).toContain("<loc>https://pcfind.avoonger.party/</loc>");
   });
 
+  it("publishes the Google Search Console verification file at the site root", () => {
+    expect(read("apps/directory-web/dist/google79f0d2554dcb2020.html").trim()).toBe("google-site-verification: google79f0d2554dcb2020.html");
+  });
+
   it("ships the Supabase-backed Vercel API handler set", () => {
     expect(read("api/search.ts")).toContain("searchPublishedStudents");
     expect(read("api/admin/imports.ts")).toContain("approved_student_xlsx");
