@@ -23,6 +23,10 @@ describe("public directory UI v0", () => {
     expect(source).toContain("daisy-dropdown-content daisy-menu");
     expect(source).toContain('role="listbox"');
     expect(source).toContain("data-select-for");
+    expect(source).toContain("gsap@3.13.0/dist/gsap.min.js");
+    expect(source).toContain("gsap-ready");
+    expect(source).toContain("stagger: 0.035");
+    expect(source).toContain("prefers-reduced-motion: reduce");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');
     expect(source).toContain('name="grade"');
