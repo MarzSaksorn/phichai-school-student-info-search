@@ -14,6 +14,8 @@ describe("public directory UI v0", () => {
     expect(source).toContain('<meta property="og:type" content="website">');
     expect(source).toContain('<meta property="og:url" content="https://pcfind.avoonger.party/">');
     expect(source).toContain('<meta name="twitter:card" content="summary">');
+    expect(source).toContain('<link rel="icon" type="image/png" href="/favicon.png">');
+    expect(source).toContain('<img class="wordmark-mark" src="/assets/logo-phicha.png"');
     expect(source).toContain('href="#main-content"');
     expect(source).toContain('id="main-content"');
     expect(source).toContain('aria-label="ส่วนหัวเว็บไซต์"');

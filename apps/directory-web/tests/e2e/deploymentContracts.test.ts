@@ -62,6 +62,11 @@ describe("deployment contracts", () => {
     expect(read("apps/directory-web/dist/google79f0d2554dcb2020.html").trim()).toBe("google-site-verification: google79f0d2554dcb2020.html");
   });
 
+  it("publishes the official school logo for the favicon and brand mark", () => {
+    expect(read("scripts/build-web.mjs")).toContain("favicon.png");
+    expect(read("scripts/build-web.mjs")).toContain("logo-phicha.png");
+  });
+
   it("ships the Supabase-backed Vercel API handler set", () => {
     expect(read("api/search.ts")).toContain("searchPublishedStudents");
     expect(read("api/admin/imports.ts")).toContain("approved_student_xlsx");
