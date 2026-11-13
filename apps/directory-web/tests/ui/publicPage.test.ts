@@ -68,4 +68,14 @@ describe("public directory UI v0", () => {
     expect(source).toContain("role=\"status\"");
     expect(source).toContain("เชื่อมต่อระบบค้นหาไม่ได้");
   });
+
+  it("keeps the public layout usable across phone, tablet, and desktop widths", () => {
+    expect(source).toContain("@media (max-width: 1024px)");
+    expect(source).toContain("@media (max-width: 720px)");
+    expect(source).toContain("@media (max-width: 480px)");
+    expect(source).toContain(".search-row { grid-template-columns: 1fr; }");
+    expect(source).toContain(".filter-row { grid-template-columns: 1fr; }");
+    expect(source).toContain(".result-grid { grid-template-columns: 1fr; }");
+    expect(source).toContain(".header-nav a { white-space: nowrap; }");
+  });
 });
