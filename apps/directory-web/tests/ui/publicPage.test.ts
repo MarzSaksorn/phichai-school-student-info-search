@@ -55,6 +55,7 @@ describe("public directory UI v0", () => {
     expect(source).toContain("item.studentNumber");
     expect(source).toContain("escapeHtml(item.studentNumber)");
     expect(source).toContain("เลขประจำตัว");
+    expect(source).toContain(".result-meta span:first-child { background: var(--pink-soft); color: var(--pink);");
     expect(source).not.toContain("item.studentIdentifier");
     expect(source).not.toContain("item.sourceFileName");
   });
