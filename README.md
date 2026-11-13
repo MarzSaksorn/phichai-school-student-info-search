@@ -37,3 +37,13 @@ Approved XLSX exports are the sole source of truth for student records. The curr
 ## Before production ingestion
 
 The school must approve the academic-year format, grade mapping, public-field allowlist, identifier policy, staff source, status rules, freshness thresholds, retention periods, and administrator role assignments. See the data contract for the complete decision list.
+
+## License
+
+The application source code is licensed under the Educational Non-Commercial License 1.0.
+
+Copyright © 2026 Saksorn Ngandee.
+
+The software is for educational use only. Commercial use, resale, paid services, monetization, and developing a commercial derivative are prohibited without prior written permission. See [LICENSE](LICENSE) for the complete terms.
+
+The Phichai School logo, school name, trademarks, student records, personal data, XLSX files, private source files, and school-provided content are excluded from this software license.
