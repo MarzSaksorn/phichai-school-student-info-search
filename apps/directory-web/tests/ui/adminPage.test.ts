@@ -33,4 +33,11 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("เชื่อมต่อระบบผู้ดูแลไม่ได้");
     expect(source).toContain("prefers-reduced-motion:reduce");
   });
+
+  it("keeps admin controls readable on narrow screens", () => {
+    expect(source).toContain("@media (max-width:560px)");
+    expect(source).toContain("@media (max-width:420px)");
+    expect(source).toContain(".metric-grid{grid-template-columns:1fr}");
+    expect(source).toContain(".meta-row strong{max-width:58%;overflow-wrap:anywhere}");
+  });
 });
