@@ -52,6 +52,12 @@ describe("deployment contracts", () => {
     expect(routes.routes).toContainEqual({ path: "/admin", title: "ผู้ดูแลระบบ · สารบบโรงเรียนพิชัย", protected: true });
   });
 
+  it("publishes crawl controls for the confirmed public domain", () => {
+    expect(read("apps/directory-web/dist/robots.txt")).toContain("Sitemap: https://pcfind.avoonger.party/sitemap.xml");
+    expect(read("apps/directory-web/dist/robots.txt")).toContain("Disallow: /admin");
+    expect(read("apps/directory-web/dist/sitemap.xml")).toContain("<loc>https://pcfind.avoonger.party/</loc>");
+  });
+
   it("ships the Supabase-backed Vercel API handler set", () => {
     expect(read("api/search.ts")).toContain("searchPublishedStudents");
     expect(read("api/admin/imports.ts")).toContain("approved_student_xlsx");
