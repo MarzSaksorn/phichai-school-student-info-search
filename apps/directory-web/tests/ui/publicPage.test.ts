@@ -39,6 +39,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain("theme-controller");
     expect(source).toContain("daisy-toggle-primary");
     expect(source).toContain('class="theme-switch daisy-toggle daisy-toggle-sm daisy-toggle-primary"');
+    expect(source).toContain('href="https://github.com/MarzSaksorn/phichai-school-student-info-search"');
+    expect(source).toContain('aria-label="เปิด GitHub repository"');
+    expect(source).toContain('class="github-link daisy-btn daisy-btn-ghost daisy-btn-circle"');
     expect(source).toContain('aria-hidden="true"');
     expect(source).toContain("grid-template-columns: 1fr auto 1fr");
     expect(source).toContain("justify-self: center");
@@ -91,5 +94,6 @@ describe("public directory UI v0", () => {
     expect(source).toContain(".filter-row { grid-template-columns: 1fr; }");
     expect(source).toContain(".result-grid { grid-template-columns: 1fr; }");
     expect(source).toContain(".header-nav a { white-space: nowrap; }");
+    expect(source).toContain(".header-actions { grid-column: 2; grid-row: 1; gap: 8px; }");
   });
 });
