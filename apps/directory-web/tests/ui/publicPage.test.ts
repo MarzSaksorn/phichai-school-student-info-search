@@ -42,6 +42,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain("scrub: 1");
     expect(source).toContain("trigger: '.site-header'");
     expect(source).toContain("prefers-reduced-motion: reduce");
+    expect(source).toContain("filter-menu-in");
+    expect(source).toContain("animateFilterSelection");
+    expect(source).toContain("ease: 'power2.out'");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');
     expect(source).toContain('name="grade"');
