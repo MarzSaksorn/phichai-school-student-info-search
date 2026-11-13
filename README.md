@@ -1,4 +1,4 @@
-# Coded by Manus AI
+### Coded by Manus AI
 
 # Phichai School Global Directory Search
 
