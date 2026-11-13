@@ -20,6 +20,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain("daisy-select");
     expect(source).toContain("daisy-card");
     expect(source).toContain("daisy-badge");
+    expect(source).toContain("daisy-dropdown-content daisy-menu");
+    expect(source).toContain('role="listbox"');
+    expect(source).toContain("data-select-for");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');
     expect(source).toContain('name="grade"');
