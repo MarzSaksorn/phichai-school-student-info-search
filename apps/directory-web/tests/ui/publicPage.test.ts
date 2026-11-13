@@ -16,6 +16,8 @@ describe("public directory UI v0", () => {
     expect(source).toContain('<meta name="twitter:card" content="summary">');
     expect(source).toContain('<link rel="icon" type="image/png" href="/favicon.png">');
     expect(source).toContain('<img class="wordmark-mark" src="/assets/logo-phicha.png"');
+    expect(source).toContain("© 2026 For Educational Only");
+    expect(source).toContain("นาย ศักย์ศรณ์ งานดี ม.4/2 · ปีการศึกษา 2569");
     expect(source).toContain('href="#main-content"');
     expect(source).toContain('id="main-content"');
     expect(source).toContain('aria-label="ส่วนหัวเว็บไซต์"');
