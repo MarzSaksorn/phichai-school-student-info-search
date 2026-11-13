@@ -271,7 +271,7 @@
         }
         if (append && !nextCursor) return;
         const requestId = ++latestRequest; const filters = getFilters();
-        if (!append) rendered = 0;
+        if (!append) { rendered = 0; loadMore.hidden = true; }
         const params = new URLSearchParams({ q: filters.q, pageSize: PAGE_SIZE }); ['academicYear', 'grade', 'room', 'status'].forEach((key) => { if (filters[key]) params.set(key, filters[key]); }); if (append && nextCursor) params.set('cursor', nextCursor);
         const cacheKey = params.toString();
         const cached = readCachedPage(cacheKey);
