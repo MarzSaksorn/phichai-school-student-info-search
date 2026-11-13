@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="th">
+<html lang="th" data-theme="phichai">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -100,15 +100,19 @@
     .search-icon::after { content: ""; position: absolute; width: 7px; height: 2px; right: -6px; bottom: -3px; background: var(--pink); transform: rotate(45deg); border-radius: 2px; }
     .search-input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); }
     .search-input::placeholder { color: #97929e; }
+    .search-input.daisy-input { min-height: 0; padding: 0; border-radius: 0; box-shadow: none; }
     .search-button { min-height: 56px; padding: 0 26px; border: 0; border-radius: 15px; background: var(--dark); color: #fff; font-weight: 800; }
+    .search-button.daisy-btn { display: inline-block; }
     .filter-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
     .filter-label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 700; }
     .filter-select { width: 100%; min-height: 45px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--ink); }
+    .filter-select.daisy-select { appearance: auto; background-image: none; box-shadow: none; }
     .popular-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0 0; color: var(--muted); font-size: 13px; }
     .popular-links button { padding: 0; border: 0; background: none; color: var(--pink); font-weight: 700; }
     .grade-chips { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 0; }
     .grade-chips > span { color: var(--muted); font-size: 13px; margin-right: 4px; }
     .chip { min-height: 38px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 700; transition: background 160ms ease, color 160ms ease, border-color 160ms ease; }
+    .chip.daisy-btn { display: inline-block; }
     .chip:hover { border-color: #d7d2dc; background: var(--pink-soft); }
     .chip[aria-pressed="true"] { background: var(--dark); border-color: var(--dark); color: #fff; }
     .status-line { min-height: 24px; margin: 18px 2px 0; color: var(--muted); font-size: 13px; }
@@ -121,6 +125,7 @@
     .result-count strong { color: var(--ink); font-size: 15px; }
     .result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     .result-card { display: flex; flex-direction: column; justify-content: space-between; min-height: 168px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: #fff; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; animation: card-in 300ms both; }
+    .result-card.daisy-card { gap: 0; }
     .result-card:hover { transform: translateY(-2px); border-color: #d7d2dc; box-shadow: 0 14px 28px rgba(23, 21, 31, .07); }
     .result-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
     .result-index { color: var(--pink); font: 700 12px/1.2 "IBM Plex Mono", monospace; }
@@ -159,7 +164,7 @@
           <p class="eyebrow">PHICHAI SCHOOL DIRECTORY</p>
           <h1 id="hero-title">ค้นชื่อ<br><em>นักเรียน</em>ทั้งโรงเรียน</h1>
           <p class="hero-copy">พิมพ์ชื่อบางส่วน หรือกรอกเลขประจำตัวบางส่วนเพื่อค้นหาทันที ทั้งโรงเรียน ทุกชั้น ทุกห้อง — พร้อมระดับชั้นและห้องเรียนกำกับ</p>
-          <div class="hero-actions"><a class="primary-button" href="#search">ค้นหาชื่อนักเรียน</a><a class="secondary-button" href="#results">ดูรายชื่อทั้งหมด</a></div>
+          <div class="hero-actions"><a class="primary-button daisy-btn" href="#search">ค้นหาชื่อนักเรียน</a><a class="secondary-button daisy-btn daisy-btn-outline" href="#results">ดูรายชื่อทั้งหมด</a></div>
           <p class="trust-note">ชื่อและเลขประจำตัวแสดงตามที่โรงเรียนอนุมัติ · ไม่เปิดเผยข้อมูลแหล่งที่มาภายใน</p>
         </div>
         <div class="hero-art" aria-label="ภาพประกอบระบบค้นหาชื่อนักเรียน" role="img">
@@ -171,23 +176,23 @@
         <div class="section-heading"><h2 id="search-title">ค้นหานักเรียน</h2><p>พิมพ์ชื่อบางส่วน หรือกรอกเลขประจำตัวบางส่วน รายชื่อทั้งหมดจะแสดงด้านล่าง</p></div>
         <form id="search-form" class="search-panel" novalidate>
           <div class="search-row">
-            <label class="search-input-wrap" for="query"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">คำค้นหา</span><input id="query" class="search-input" name="q" type="search" autocomplete="off" placeholder="ค้นหาชื่อ หรือเลขประจำตัวบางส่วน" maxlength="80"></label>
-            <button class="search-button" type="submit">ค้นหา</button>
+            <label class="search-input-wrap" for="query"><span class="search-icon" aria-hidden="true"></span><span class="sr-only">คำค้นหา</span><input id="query" class="search-input daisy-input" name="q" type="search" autocomplete="off" placeholder="ค้นหาชื่อ หรือเลขประจำตัวบางส่วน" maxlength="80"></label>
+            <button class="search-button daisy-btn" type="submit">ค้นหา</button>
           </div>
           <div class="filter-row" aria-label="ตัวกรองการค้นหา">
-            <label class="filter-label" for="academic-year">ปีการศึกษา<select id="academic-year" class="filter-select" name="academicYear"><option value="">ทุกปีการศึกษา</option><option value="2569">2569</option><option value="2568">2568</option></select></label>
-            <label class="filter-label" for="grade">ระดับชั้น<select id="grade" class="filter-select" name="grade"><option value="">ทุกระดับชั้น</option><option value="ม.1">ม.1</option><option value="ม.2">ม.2</option><option value="ม.3">ม.3</option><option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option></select></label>
-            <label class="filter-label" for="room">ห้องเรียน<select id="room" class="filter-select" name="room"><option value="">ทุกห้อง</option><option value="1">ห้อง 1</option><option value="2">ห้อง 2</option><option value="3">ห้อง 3</option><option value="4">ห้อง 4</option><option value="5">ห้อง 5</option><option value="6">ห้อง 6</option><option value="7">ห้อง 7</option><option value="8">ห้อง 8</option><option value="9">ห้อง 9</option><option value="10">ห้อง 10</option><option value="11">ห้อง 11</option><option value="12">ห้อง 12</option></select></label>
-            <label class="filter-label" for="status">สถานะ<select id="status" class="filter-select" name="status"><option value="">ทุกสถานะ</option><option value="ปกติ">ปกติ</option><option value="ย้าย">ย้าย</option></select></label>
+            <label class="filter-label" for="academic-year">ปีการศึกษา<select id="academic-year" class="filter-select daisy-select" name="academicYear"><option value="">ทุกปีการศึกษา</option><option value="2569">2569</option><option value="2568">2568</option></select></label>
+            <label class="filter-label" for="grade">ระดับชั้น<select id="grade" class="filter-select daisy-select" name="grade"><option value="">ทุกระดับชั้น</option><option value="ม.1">ม.1</option><option value="ม.2">ม.2</option><option value="ม.3">ม.3</option><option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option></select></label>
+            <label class="filter-label" for="room">ห้องเรียน<select id="room" class="filter-select daisy-select" name="room"><option value="">ทุกห้อง</option><option value="1">ห้อง 1</option><option value="2">ห้อง 2</option><option value="3">ห้อง 3</option><option value="4">ห้อง 4</option><option value="5">ห้อง 5</option><option value="6">ห้อง 6</option><option value="7">ห้อง 7</option><option value="8">ห้อง 8</option><option value="9">ห้อง 9</option><option value="10">ห้อง 10</option><option value="11">ห้อง 11</option><option value="12">ห้อง 12</option></select></label>
+            <label class="filter-label" for="status">สถานะ<select id="status" class="filter-select daisy-select" name="status"><option value="">ทุกสถานะ</option><option value="ปกติ">ปกติ</option><option value="ย้าย">ย้าย</option></select></label>
           </div>
           <p id="status-line" class="status-line" role="status" aria-live="polite">พร้อมแสดงรายชื่อนักเรียนที่เผยแพร่แล้ว</p>
         </form>
       </section>
 
       <section id="results" class="scroll-mt-6" aria-labelledby="results-title">
-        <div class="results-header"><h2 id="results-title">รายชื่อนักเรียน</h2><div class="grade-chips" aria-label="ตัวกรองชั้นเรียนด่วน"><span>ดูตามชั้น:</span><button class="chip" type="button" data-filter="grade" data-value="" aria-pressed="true">ทั้งหมด</button><button class="chip" type="button" data-filter="grade" data-value="ม.1" aria-pressed="false">ม.1</button><button class="chip" type="button" data-filter="grade" data-value="ม.2" aria-pressed="false">ม.2</button><button class="chip" type="button" data-filter="grade" data-value="ม.3" aria-pressed="false">ม.3</button><button class="chip" type="button" data-filter="grade" data-value="ม.4" aria-pressed="false">ม.4</button><button class="chip" type="button" data-filter="grade" data-value="ม.5" aria-pressed="false">ม.5</button><button class="chip" type="button" data-filter="grade" data-value="ม.6" aria-pressed="false">ม.6</button></div><span id="result-count" class="result-count">กำลังโหลดรายชื่อ…</span></div>
+        <div class="results-header"><h2 id="results-title">รายชื่อนักเรียน</h2><div class="grade-chips" aria-label="ตัวกรองชั้นเรียนด่วน"><span>ดูตามชั้น:</span><button class="chip daisy-btn" type="button" data-filter="grade" data-value="" aria-pressed="true">ทั้งหมด</button><button class="chip daisy-btn" type="button" data-filter="grade" data-value="ม.1" aria-pressed="false">ม.1</button><button class="chip daisy-btn" type="button" data-filter="grade" data-value="ม.2" aria-pressed="false">ม.2</button><button class="chip daisy-btn" type="button" data-filter="grade" data-value="ม.3" aria-pressed="false">ม.3</button><button class="chip daisy-btn" type="button" data-filter="grade" data-value="ม.4" aria-pressed="false">ม.4</button><button class="chip daisy-btn" type="button" data-filter="grade" data-value="ม.5" aria-pressed="false">ม.5</button><button class="chip daisy-btn" type="button" data-filter="grade" data-value="ม.6" aria-pressed="false">ม.6</button></div><span id="result-count" class="result-count">กำลังโหลดรายชื่อ…</span></div>
         <div id="result-region" class="auto-rows-fr"><div class="empty-state"><h3>กำลังโหลดรายชื่อ</h3><p>ระบบกำลังดึงรายชื่อนักเรียนที่เผยแพร่ล่าสุด</p></div></div>
-        <div class="load-more"><button id="load-more" class="secondary-button" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
+        <div class="load-more"><button id="load-more" class="secondary-button daisy-btn daisy-btn-outline" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
       </section>
 
       <section id="about" class="site-footer" aria-label="ข้อมูลเกี่ยวกับสารบบ"><p><strong>หลักการข้อมูล</strong><br>ข้อมูลนักเรียนมาจากไฟล์ XLSX ที่โรงเรียนอนุมัติเท่านั้น</p><p><strong>ข้อมูลที่แสดง</strong><br>ชื่อและเลขประจำตัวเผยแพร่ตามมติอนุมัติของโรงเรียน · ไม่แสดงแหล่งที่มาภายใน</p></section>
@@ -221,7 +226,7 @@
       const getFilters = () => ({ q: queryInput.value.trim(), academicYear: document.querySelector('#academic-year').value, grade: document.querySelector('#grade').value, room: document.querySelector('#room').value, status: document.querySelector('#status').value });
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
       const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; nextCursor = ''; loadMore.hidden = true; resultRegion.removeAttribute('aria-busy'); };
-      const card = (item, index) => '<article class="result-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (item.status ? '<span class="result-status">' + escapeHtml(item.status) + '</span>' : '') + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>';
+      const card = (item, index) => '<article class="result-card daisy-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (item.status ? '<span class="result-status daisy-badge">' + escapeHtml(item.status) + '</span>' : '') + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span></div></article>';
       const renderCards = (items, append = false) => {
         if (!append && items.length === 0) { renderEmpty('ไม่พบชื่อที่ตรงกัน', 'ลองพิมพ์ชื่อบางส่วน หรือเลือกชั้นเรียนใหม่'); return; }
         const start = append ? rendered : 0;

@@ -6,7 +6,7 @@ const source = readFileSync(resolve(import.meta.dirname, "../../src/ui/directory
 
 describe("public directory UI v0", () => {
   it("has accessible language, landmark, skip-link, labels, and result status regions", () => {
-    expect(source).toMatch(/<html lang="th">/u);
+    expect(source).toMatch(/<html lang="th" data-theme="phichai">/u);
     expect(source).toContain('href="#main-content"');
     expect(source).toContain('id="main-content"');
     expect(source).toContain('aria-label="ส่วนหัวเว็บไซต์"');
@@ -15,6 +15,11 @@ describe("public directory UI v0", () => {
   });
 
   it("contains the approved responsive search controls and API wiring", () => {
+    expect(source).toContain("daisy-btn");
+    expect(source).toContain("daisy-input");
+    expect(source).toContain("daisy-select");
+    expect(source).toContain("daisy-card");
+    expect(source).toContain("daisy-badge");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');
     expect(source).toContain('name="grade"');
