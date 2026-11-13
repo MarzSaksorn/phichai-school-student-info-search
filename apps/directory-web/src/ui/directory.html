@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/tailwind.css">
   <style>
     :root {
       --font-display: "IBM Plex Sans Thai", "Noto Sans Thai UI SemiCondensed", sans-serif;
@@ -143,7 +144,7 @@
     @media (max-width: 640px) { .site-header, .page-shell { padding-left: 20px; padding-right: 20px; } .header-nav { display: none; } .header-note { font-size: 12px; } .hero { padding-top: 32px; } h1 { font-size: clamp(42px, 13vw, 64px); } .hero-art { min-height: 260px; } .art-card { inset: 30px 28px 28px 24px; padding: 22px; } .search-row, .filter-row { grid-template-columns: 1fr; } .search-button { width: 100%; } .section-heading { display: block; } .section-heading p { margin-top: 8px; text-align: left; } .result-grid { grid-template-columns: 1fr; } .results-header { display: block; } .result-count { display: block; margin-top: 6px; } .site-footer { display: block; } .site-footer p + p { margin-top: 10px; } }
   </style>
 </head>
-<body>
+<body class="antialiased">
   <a class="skip-link" href="#main-content">ข้ามไปยังเนื้อหาหลัก</a>
   <header class="site-header" aria-label="ส่วนหัวเว็บไซต์">
     <a class="wordmark" href="/" aria-label="โรงเรียนพิชัย หน้าหลัก"><span class="wordmark-mark" aria-hidden="true">พ</span><span>โรงเรียนพิชัย</span></a>
@@ -151,9 +152,9 @@
     <span class="header-note">ข้อมูลจากโรงเรียน</span>
   </header>
 
-  <main id="main-content" tabindex="-1">
-    <div class="page-shell">
-      <section class="hero" aria-labelledby="hero-title">
+  <main id="main-content" class="isolate" tabindex="-1">
+    <div class="page-shell mx-auto">
+      <section class="hero text-pretty" aria-labelledby="hero-title">
         <div>
           <p class="eyebrow">PHICHAI SCHOOL DIRECTORY</p>
           <h1 id="hero-title">ค้นชื่อ<br><em>นักเรียน</em>ทั้งโรงเรียน</h1>
@@ -183,9 +184,9 @@
         </form>
       </section>
 
-      <section id="results" aria-labelledby="results-title">
+      <section id="results" class="scroll-mt-6" aria-labelledby="results-title">
         <div class="results-header"><h2 id="results-title">รายชื่อนักเรียน</h2><div class="grade-chips" aria-label="ตัวกรองชั้นเรียนด่วน"><span>ดูตามชั้น:</span><button class="chip" type="button" data-filter="grade" data-value="" aria-pressed="true">ทั้งหมด</button><button class="chip" type="button" data-filter="grade" data-value="ม.1" aria-pressed="false">ม.1</button><button class="chip" type="button" data-filter="grade" data-value="ม.2" aria-pressed="false">ม.2</button><button class="chip" type="button" data-filter="grade" data-value="ม.3" aria-pressed="false">ม.3</button><button class="chip" type="button" data-filter="grade" data-value="ม.4" aria-pressed="false">ม.4</button><button class="chip" type="button" data-filter="grade" data-value="ม.5" aria-pressed="false">ม.5</button><button class="chip" type="button" data-filter="grade" data-value="ม.6" aria-pressed="false">ม.6</button></div><span id="result-count" class="result-count">กำลังโหลดรายชื่อ…</span></div>
-        <div id="result-region"><div class="empty-state"><h3>กำลังโหลดรายชื่อ</h3><p>ระบบกำลังดึงรายชื่อนักเรียนที่เผยแพร่ล่าสุด</p></div></div>
+        <div id="result-region" class="auto-rows-fr"><div class="empty-state"><h3>กำลังโหลดรายชื่อ</h3><p>ระบบกำลังดึงรายชื่อนักเรียนที่เผยแพร่ล่าสุด</p></div></div>
         <div class="load-more"><button id="load-more" class="secondary-button" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
       </section>
 

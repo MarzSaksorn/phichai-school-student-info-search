@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@source "./directory.html";
+
+@theme {
+  --color-canvas: #ffffff;
+  --color-ink: #17151f;
+  --color-muted: #6f6b78;
+  --color-brand-pink: #ea4c89;
+  --color-brand-pink-soft: #fff3f8;
+  --color-brand-lime: #d8f05a;
+  --color-brand-dark: #191720;
+  --color-brand-border: #e9e7ec;
+  --font-display: "IBM Plex Sans Thai", "Noto Sans Thai UI SemiCondensed", sans-serif;
+  --font-ui: "Noto Sans Thai UI SemiCondensed", "Noto Sans Thai UI", "IBM Plex Sans Thai", sans-serif;
+  --radius-brand: 28px;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply antialiased;
+  }
+
+  ::selection {
+    @apply bg-brand-pink text-white;
+  }
+}
+
+@layer components {
+  .tw-surface {
+    @apply rounded-brand border border-brand-border bg-white;
+  }
+
+  .tw-muted-copy {
+    @apply text-muted;
+  }
+}
