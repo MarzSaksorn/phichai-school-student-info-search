@@ -11,6 +11,6 @@ export function exposesStudentNumber(config: ApprovedFieldConfig | null | undefi
     config.student_public_fields.includes("studentNumber");
 }
 
-export function allowsExactStudentNumberSearch(config: ApprovedFieldConfig | null | undefined): boolean {
+export function allowsStudentNumberSearch(config: ApprovedFieldConfig | null | undefined): boolean {
   return exposesStudentNumber(config) && config?.student_identifier_search === "exact_only";
 }

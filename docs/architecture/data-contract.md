@@ -149,7 +149,7 @@ export type PublicStaff = {
 };
 ```
 
-`studentIdentifier` remains an internal field name; the public API may expose its value as `studentNumber` only when the dataset is linked to an `approved_field_config` version that allows public display and exact search. Search terms containing only digits use exact-match semantics; partial number matching is not supported. `searchName`, `sourceFileId`, `sourceFileName`, `sourceSheet`, `sourceRow`, raw workbook values, internal database IDs, and audit details remain private. The school-approved version `phichai-student-number-public-v1` records this decision; missing or restrictive policy config fails closed.
+`studentIdentifier` remains an internal field name; the public API may expose its value as `studentNumber` only when the dataset is linked to an `approved_field_config` version that allows public display and approved number search. Search terms containing only digits use prefix-match semantics, so a query such as `269` matches identifiers beginning with `269`. `searchName`, `sourceFileId`, `sourceFileName`, `sourceSheet`, `sourceRow`, raw workbook values, internal database IDs, and audit details remain private. The school-approved version `phichai-student-number-public-v1` records this decision; missing or restrictive policy config fails closed.
 
 ## Import jobs and issues
 
@@ -270,7 +270,7 @@ export type ApprovedFieldConfig = {
 };
 ```
 
-The default remains no public student-number display unless an approved config is tied to the active dataset. The school-approved `phichai-student-number-public-v1` policy allows public display and exact search; source metadata and raw identifiers are never logged.
+The default remains no public student-number display unless an approved config is tied to the active dataset. The school-approved `phichai-student-number-public-v1` policy allows public display and approved number-prefix search; source metadata and raw identifiers are never logged.
 
 ## State semantics
 
@@ -296,7 +296,7 @@ The default remains no public student-number display unless an approved config i
 
 ## Approved student workbook mapping (2026-11-12)
 
-The school-approved `student-xlsx-room-sheets-v1` mapping accepts a complete cohort of six approved files, `M.1-69.xlsx` through `M.6-69.xlsx`, one for each grade and academic year. The header row is row 5. Grade is derived from the filename (`M.1-69.xlsx` → `ม.1`), and room is derived from the trimmed numeric sheet name (`" 1"` → `1`). The display name combines `ชื่อ-สกุล` and `สกุล`. A nonempty student number is required for every accepted row, and duplicates are rejected across the full six-file cohort. The identifier remains an internal `studentIdentifier` field; the active `phichai-student-number-public-v1` field configuration exposes its value as `studentNumber` and permits exact-only number search. Status is omitted unless a separately approved source field is added. Staff records are not created by this student mapping.
+The school-approved `student-xlsx-room-sheets-v1` mapping accepts a complete cohort of six approved files, `M.1-69.xlsx` through `M.6-69.xlsx`, one for each grade and academic year. The header row is row 5. Grade is derived from the filename (`M.1-69.xlsx` → `ม.1`), and room is derived from the trimmed numeric sheet name (`" 1"` → `1`). The display name combines `ชื่อ-สกุล` and `สกุล`. A nonempty student number is required for every accepted row, and duplicates are rejected across the full six-file cohort. The identifier remains an internal `studentIdentifier` field; the active `phichai-student-number-public-v1` field configuration exposes its value as `studentNumber` and permits approved number-prefix search. Status is omitted unless a separately approved source field is added. Staff records are not created by this student mapping.
 
 ## Release evidence and fixture rules
 

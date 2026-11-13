@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { allowsExactStudentNumberSearch, exposesStudentNumber, type ApprovedFieldConfig } from "./publicFieldConfig.js";
+import { allowsStudentNumberSearch, exposesStudentNumber, type ApprovedFieldConfig } from "./publicFieldConfig.js";
 import { supabaseAdmin } from "./supabase.js";
 
 export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; cursor?: string; pageSize: number };
@@ -78,7 +78,7 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
     fieldConfig = data;
   }
   const showStudentNumber = exposesStudentNumber(fieldConfig);
-  const searchStudentNumber = allowsExactStudentNumberSearch(fieldConfig);
+  const searchStudentNumber = allowsStudentNumberSearch(fieldConfig);
   let query = supabaseAdmin()
     .schema("directory")
     .from("published_student_records")
@@ -88,7 +88,8 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
     .not("display_name", "ilike", "%จำนวนนักเรียน%")
     .order("public_id", { ascending: true });
   // Number lookup is available only when the active version's approved field config allows it.
-  if (searchStudentNumber && /^\d{1,12}$/u.test(q)) query = query.eq("student_identifier", q);
+  // Digit-only input is treated as a prefix, so "269" matches 26901 through 26999.
+  if (searchStudentNumber && /^\d{1,12}$/u.test(q)) query = query.ilike("student_identifier", `${q}%`);
   else if (q) query = query.ilike("search_name", `%${q.replace(/[%_]/gu, "\\$&")}%`);
   if (input.academicYear) query = query.eq("academic_year", clean(input.academicYear));
   if (input.grade) query = query.eq("grade", clean(input.grade));

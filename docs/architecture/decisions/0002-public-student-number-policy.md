@@ -1,4 +1,4 @@
-# Decision 0002: Public student-number display and exact search
+# Decision 0002: Public student-number display and prefix search
 
 **Date:** 2026-11-12  
 **Status:** Approved for implementation by the school-authorized project requestor; production enablement remains gated on migration, import review, and publication confirmation.
@@ -10,8 +10,8 @@ The approved workbook already contains a student-number column, and the importer
 ## Decision
 
 - Public results may include the value under the API/UI field name `studentNumber`, only when the active dataset links to approved field-config version `phichai-student-number-public-v1`.
-- Digit-only queries use exact equality against the stored identifier. Partial number matching is not allowed.
-- A missing or restrictive field configuration fails closed: no number is returned and exact number search is disabled.
+- Digit-only queries use prefix matching against the stored identifier. For example, `269` matches identifiers from `26901` through `26999`.
+- A missing or restrictive field configuration fails closed: no number is returned and number search is disabled.
 - Continue to keep the internal property name `studentIdentifier`, source file/sheet/row details, raw workbook values, and query values out of public responses and telemetry.
 - The public page must clearly state that numbers are displayed under school approval.
 

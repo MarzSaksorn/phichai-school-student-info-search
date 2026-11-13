@@ -27,18 +27,18 @@ vi.mock("../../api/_lib/supabase.js", () => ({
         const builder: Record<string, (...args: unknown[]) => unknown> = {};
         const self = () => builder;
         const filters: Array<[string, unknown]> = [];
-        let pattern: string | null = null;
+        let pattern: { column: string; value: string } | null = null;
         builder.select = self;
         builder.eq = (column: unknown, value: unknown) => { filters.push([String(column), value]); return builder; };
         builder.not = self;
         builder.order = self;
-        builder.ilike = (_column: unknown, value: unknown) => { pattern = String(value); return builder; };
+        builder.ilike = (column: unknown, value: unknown) => { pattern = { column: String(column), value: String(value) }; return builder; };
         builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : state.policy, error: null });
         builder.range = async (_from: unknown, to: unknown) => {
           const matching = state.rows.filter((row) => filters.every(([column, value]) => {
             if (column === "dataset_version_id") return true;
             return (row as Record<string, unknown>)[column] === value;
-          }) && (pattern === null || String(row.display_name).includes(pattern.replace(/%/gu, "").toLowerCase())));
+          }) && (pattern === null || (pattern.column === "student_identifier" ? String(row.student_identifier).startsWith(pattern.value.replace(/%/gu, "")) : String(row.display_name).includes(pattern.value.replace(/%/gu, "").toLowerCase()))));
           // The database's own order is irrelevant here: it only has to be stable,
           // which public_id ordering gives.
           const ordered = [...matching].sort((a, b) => a.public_id.localeCompare(b.public_id));

@@ -18,9 +18,9 @@ describe("Vercel API contracts", () => {
     const source = read("api/_lib/publicSearch.ts");
     expect(source).toContain("public_id,display_name,student_identifier,academic_year,grade,room,status");
     expect(source).toContain("approved_field_config");
-    expect(source).toContain("allowsExactStudentNumberSearch(fieldConfig)");
+    expect(source).toContain("allowsStudentNumberSearch(fieldConfig)");
     expect(source).not.toContain("source_file_id");
-    expect(source).toContain('.eq("student_identifier", q)');
+    expect(source).toContain('.ilike("student_identifier", `${q}%`)');
     expect(read("apps/directory-worker/src/db/migrations/007_public_student_number_policy.sql")).toContain("student_identifier_display in ('disabled', 'masked', 'authenticated_only', 'public')");
   });
 

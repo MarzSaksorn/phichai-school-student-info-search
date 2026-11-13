@@ -11,7 +11,7 @@
 - Website URLs and website-derived records must be rejected before parsing.
 - A failed or invalid import must not change the current live dataset.
 - Raw XLSX files, row-level issues, source filenames, sheet names, row locations, and audit traces are restricted to authorized administrators.
-- Student-number display and exact-number search are enabled only through the versioned school-approved public-field policy.
+- Student-number display and approved number-prefix search are enabled only through the versioned school-approved public-field policy.
 - Do not place production personal data in development fixtures, tickets, screenshots, or logs.
 
 ## Roles
@@ -51,7 +51,7 @@ At least one authorized publisher must explicitly confirm publication. A failed 
 4. For a ready job, review accepted, rejected, and warned row counts; all six files and sheet coverage; student-number completeness and duplicates across files; academic-year checks; expected room coverage; and the masked preview.
 5. Confirm that preview values are normalized and masked as designed. Raw rows must not appear in unauthenticated responses.
 6. Confirm no student record lacks restricted traceability to source file, sheet, and row.
-7. Confirm the proposed public fields match the approved field configuration, including public student-number display and exact-only number search.
+7. Confirm the proposed public fields match the approved field configuration, including public student-number display and approved number-prefix search.
 8. Record any school decision needed for grade mapping, identifier behavior, status handling, or unexpected sheets before publication.
 
 ## 4. Publish a valid dataset
@@ -59,7 +59,7 @@ At least one authorized publisher must explicitly confirm publication. A failed 
 1. A publisher reviews the validation report and masked preview.
 2. Confirm the academic year, source manifest, row counts, warning count, and expected grade/room coverage.
 3. Confirm the import is not derived from the website and contains no website synchronization step.
-4. Select **Publish** and explicitly confirm the exact counts, public student-number display, exact-number search, and that a new immutable dataset version will become live.
+4. Select **Publish** and explicitly confirm the exact counts, public student-number display, number-prefix search, and that a new immutable dataset version will become live.
 5. The system creates the version, builds index records, verifies the six-file manifest and policy, and switches the active-version pointer with the job status in one database transaction.
 6. Until that transaction commits, the previous active version remains public.
 7. Publication is successful only when the job reaches `published` and the version is marked active.

@@ -11,13 +11,13 @@ paths:
       operationId: searchStudents
       security: []
       description: >-
-        Returns published students ordered by display name. Omitting q and every
+        Returns published students ordered by roster order. Omitting q and every
         filter is a browse request that lists the whole published roster, one page
         at a time.
       parameters:
         - name: q
           in: query
-          description: Partial name search; digit-only input matches an approved student number exactly.
+          description: Partial name search; digit-only input matches an approved student-number prefix.
           schema: { type: string, maxLength: 80 }
         - { name: academicYear, in: query, schema: { type: string, maxLength: 20 } }
         - { name: grade, in: query, schema: { type: string, maxLength: 20 } }

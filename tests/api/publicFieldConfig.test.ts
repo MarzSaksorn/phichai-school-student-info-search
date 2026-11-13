@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowsExactStudentNumberSearch, exposesStudentNumber } from "../../api/_lib/publicFieldConfig.js";
+import { allowsStudentNumberSearch, exposesStudentNumber } from "../../api/_lib/publicFieldConfig.js";
 
 const approved = {
   student_public_fields: ["displayName", "studentNumber", "grade"],
@@ -8,25 +8,25 @@ const approved = {
 };
 
 describe("approved public student-number policy", () => {
-  it("allows display and exact search only for the explicit public configuration", () => {
+  it("allows display and number search only for the explicit public configuration", () => {
     expect(exposesStudentNumber(approved)).toBe(true);
-    expect(allowsExactStudentNumberSearch(approved)).toBe(true);
+    expect(allowsStudentNumberSearch(approved)).toBe(true);
   });
 
   it("fails closed when the active dataset has no approved public field config", () => {
     expect(exposesStudentNumber(null)).toBe(false);
-    expect(allowsExactStudentNumberSearch(null)).toBe(false);
+    expect(allowsStudentNumberSearch(null)).toBe(false);
   });
 
   it("does not display or search numbers when the policy only allows internal display modes", () => {
     const restricted = { ...approved, student_identifier_display: "authenticated_only" };
     expect(exposesStudentNumber(restricted)).toBe(false);
-    expect(allowsExactStudentNumberSearch(restricted)).toBe(false);
+    expect(allowsStudentNumberSearch(restricted)).toBe(false);
   });
 
-  it("does not permit number lookup unless exact search is approved", () => {
+  it("does not permit number lookup unless search is approved", () => {
     const displayOnly = { ...approved, student_identifier_search: "disabled" };
     expect(exposesStudentNumber(displayOnly)).toBe(true);
-    expect(allowsExactStudentNumberSearch(displayOnly)).toBe(false);
+    expect(allowsStudentNumberSearch(displayOnly)).toBe(false);
   });
 });
