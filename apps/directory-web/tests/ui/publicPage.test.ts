@@ -20,6 +20,8 @@ describe("public directory UI v0", () => {
     expect(source).toContain("daisy-select");
     expect(source).toContain("daisy-card");
     expect(source).toContain("daisy-badge");
+    expect(source).toContain("--line: var(--color-base-300)");
+    expect(source).not.toContain("--border: var(--color-base-300)");
     expect(source).toContain("theme-controller");
     expect(source).toContain("daisy-toggle-primary");
     expect(source).toContain('id="theme-toggle"');
