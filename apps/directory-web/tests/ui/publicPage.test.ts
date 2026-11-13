@@ -7,9 +7,17 @@ const source = readFileSync(resolve(import.meta.dirname, "../../src/ui/directory
 describe("public directory UI v0", () => {
   it("has accessible language, landmark, skip-link, labels, and result status regions", () => {
     expect(source).toMatch(/<html lang="th" data-theme="phichai">/u);
+    expect(source).toContain("<title>STDPhichai Search</title>");
+    expect(source).toContain('name="description" content="STDPhichai Search, หานักเรียนพิชัยจากข้อมูลที่โรงเรียนอนุมัติ ค้นหาด้วยชื่อหรือเลขประจำตัว ชั้นเรียน และห้องเรียน"');
+    expect(source).toContain('<meta name="robots" content="index,follow">');
+    expect(source).toContain('<link rel="canonical" href="https://pcfind.avoonger.party/">');
+    expect(source).toContain('<meta property="og:type" content="website">');
+    expect(source).toContain('<meta property="og:url" content="https://pcfind.avoonger.party/">');
+    expect(source).toContain('<meta name="twitter:card" content="summary">');
     expect(source).toContain('href="#main-content"');
     expect(source).toContain('id="main-content"');
     expect(source).toContain('aria-label="ส่วนหัวเว็บไซต์"');
+    expect(source).toContain("STDPhichai Search");
     expect(source).toContain('for="query"');
     expect(source).toContain('role="status" aria-live="polite"');
   });
