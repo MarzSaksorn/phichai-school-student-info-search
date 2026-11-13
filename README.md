@@ -2,9 +2,11 @@
 
 Thai-first global student and staff directory search for Phichai School.
 
-## Version 1.0.0 — Full code release
+## Version 1.1.0 — Responsive layout release
 
-This release completes the v1 directory implementation: approved XLSX-backed search, deterministic roster ordering, Thai-first public results, responsive filters, accessible daisyUI menus, GSAP card and header motion, and light/dark theme support. The release has passed the repository verification suite, including 38 test files with 121 tests, integration and E2E contracts, accessibility checks, typecheck, the approved anonymized search benchmark, and production dependency audit.
+This release makes the public directory and protected admin surface responsive across phones, tablets, laptops, and desktop screens. It adds mobile-first navigation, stacked search actions, adaptive filters and result controls, controlled hero artwork sizing, compact admin metrics, and responsive regression coverage. The release passed the repository verification suite with 38 test files and 123 tests, integration and E2E contracts, accessibility checks, typecheck, the approved anonymized search benchmark, and production dependency audit.
+
+The v1.0.0 directory implementation remains the functional baseline.
 
 This is a code release, not a claim that production data has been imported or published. Vercel deployment, production secrets, school workbook ingestion, dataset publication, and rollback verification remain controlled operational steps requiring the release checklist and explicit authorization.
 

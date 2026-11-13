@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Phichai School Directory API
-  version: 0.1.0
+  version: 1.1.0
   description: Server-only Vercel API for the public student directory and protected import lifecycle.
 servers:
   - url: /
