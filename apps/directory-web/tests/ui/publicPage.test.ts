@@ -21,6 +21,7 @@ describe("public directory UI v0", () => {
     expect(source).toContain("daisy-card");
     expect(source).toContain("daisy-badge");
     expect(source).toContain("theme-controller");
+    expect(source).toContain("daisy-toggle-primary");
     expect(source).toContain('id="theme-toggle"');
     expect(source).toContain("phichai-dark");
     expect(source).toContain("daisy-dropdown-content daisy-menu");
