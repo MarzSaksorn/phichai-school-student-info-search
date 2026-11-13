@@ -52,17 +52,16 @@
     .skip-link:focus-visible { transform: translateY(0); }
 
     .site-header {
-      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px;
       max-width: 1240px; margin: 0 auto; padding: 22px 32px;
     }
     .wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; letter-spacing: -.04em; }
     .wordmark-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 10px; background: var(--dark); color: #fff; font-size: 13px; letter-spacing: 0; }
     .wordmark span:last-child { font-size: 17px; }
-    .header-nav { display: flex; align-items: center; gap: 24px; color: var(--muted); font-size: 14px; font-weight: 650; }
+    .header-nav { display: flex; align-items: center; justify-self: center; gap: 24px; color: var(--muted); font-size: 14px; font-weight: 650; }
     .header-nav a { text-decoration: none; }
     .header-nav a:hover { color: var(--ink); }
-    .header-note { color: var(--pink); font-size: 13px; font-weight: 700; }
-    .theme-switch { display: inline-grid; align-items: center; flex: 0 0 auto; }
+    .theme-switch { display: inline-grid; align-items: center; justify-self: end; }
 
     .page-shell { max-width: 1240px; margin: 0 auto; padding: 0 32px 72px; }
     .hero { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr); gap: clamp(44px, 8vw, 104px); align-items: center; padding: 64px 0 78px; }
@@ -162,7 +161,6 @@
     @keyframes card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
     @media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding: 44px 0 58px; } .hero-art { max-width: 640px; min-height: 300px; } .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 640px) { .site-header, .page-shell { padding-left: 20px; padding-right: 20px; } .header-nav { display: none; } .header-note { font-size: 12px; } .hero { padding-top: 32px; } h1 { font-size: clamp(42px, 13vw, 64px); } .hero-art { min-height: 260px; } .art-card { inset: 30px 28px 28px 24px; padding: 22px; } .search-row, .filter-row { grid-template-columns: 1fr; } .search-button { width: 100%; } .section-heading { display: block; } .section-heading p { margin-top: 8px; text-align: left; } .result-grid { grid-template-columns: 1fr; } .results-header { display: block; } .result-count { display: block; margin-top: 6px; } .site-footer { display: block; } .site-footer p + p { margin-top: 10px; } }
   </style>
 </head>
 <body class="antialiased">
@@ -170,7 +168,7 @@
   <header class="site-header" aria-label="ส่วนหัวเว็บไซต์">
     <a class="wordmark" href="/" aria-label="โรงเรียนพิชัย หน้าหลัก"><span class="wordmark-mark" aria-hidden="true">พ</span><span>โรงเรียนพิชัย</span></a>
     <nav class="header-nav" aria-label="การนำทางหลัก"><a href="#search">ค้นหานักเรียน</a><a href="#results">รายชื่อทั้งหมด</a><a href="#about">เกี่ยวกับข้อมูล</a></nav>
-    <span class="header-note">ข้อมูลจากโรงเรียน</span><label class="theme-switch daisy-toggle daisy-toggle-sm daisy-toggle-primary" title="สลับโหมดสว่างและโหมดมืด"><input id="theme-toggle" type="checkbox" value="phichai-dark" class="theme-controller" aria-label="สลับโหมดสว่างและโหมดมืด"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm0 17a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0v-1a1 1 0 0 1 1-1ZM4.93 3.51a1 1 0 0 1 1.41 0l.71.7a1 1 0 0 1-1.42 1.42l-.7-.71a1 1 0 0 1 0-1.41Zm12.02 12.02a1 1 0 0 1 1.41 0l.71.7a1 1 0 0 1-1.42 1.42l-.7-.71a1 1 0 0 1 0-1.41ZM2 12a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1Zm17 0a1 1 0 0 1 1-1h1a1 1 0 1 1 0 2h-1a1 1 0 0 1-1-1ZM4.93 20.49a1 1 0 0 1 0-1.41l.7-.71a1 1 0 1 1 1.42 1.42l-.71.7a1 1 0 0 1-1.41 0ZM17 4.22a1 1 0 0 1 1.41 0 1 1 0 0 1 0 1.41l-.7.71a1 1 0 1 1-1.42-1.42l.71-.7ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z" /></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20.74 15.31A8.5 8.5 0 0 1 8.69 3.26 8.5 8.5 0 1 0 20.74 15.31Z" /></svg></label>
+    <label class="theme-switch daisy-toggle daisy-toggle-sm daisy-toggle-primary" title="สลับโหมดสว่างและโหมดมืด"><input id="theme-toggle" type="checkbox" value="phichai-dark" class="theme-controller" aria-label="สลับโหมดสว่างและโหมดมืด"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36-6.36-1.42 1.42M7.05 16.95l-1.42 1.42m0-12.02 1.42 1.42m9.9 9.9 1.42 1.42M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20.74 15.31A8.5 8.5 0 0 1 8.69 3.26 8.5 8.5 0 1 0 20.74 15.31Z" /></svg></label>
   </header>
 
   <main id="main-content" class="isolate" tabindex="-1">
