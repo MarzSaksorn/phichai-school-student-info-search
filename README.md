@@ -2,9 +2,16 @@
 
 Thai-first global student and staff directory search for Phichai School.
 
+## Version 1.0.0 — Full code release
+
+This release completes the v1 directory implementation: approved XLSX-backed search, deterministic roster ordering, Thai-first public results, responsive filters, accessible daisyUI menus, GSAP card and header motion, and light/dark theme support. The release has passed the repository verification suite, including 38 test files with 121 tests, integration and E2E contracts, accessibility checks, typecheck, the approved anonymized search benchmark, and production dependency audit.
+
+This is a code release, not a claim that production data has been imported or published. Vercel deployment, production secrets, school workbook ingestion, dataset publication, and rollback verification remain controlled operational steps requiring the release checklist and explicit authorization.
+
 ## Current baseline
 
-- **Web and admin UI:** Next.js / TypeScript on Vercel
+- **Public and admin UI:** Static Thai-first HTML/CSS/JavaScript built with Tailwind CSS v4 and daisyUI 5
+- **API and hosting:** Vercel serverless functions and static output
 - **Database:** Supabase Postgres
 - **Authentication:** Supabase Auth with the school-approved OIDC provider when available
 - **Private files:** Supabase Storage private buckets

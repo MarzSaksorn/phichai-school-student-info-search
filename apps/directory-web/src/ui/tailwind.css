@@ -1,5 +1,81 @@
 @import "tailwindcss";
 
+@plugin "daisyui" {
+  themes: phichai --default, phichai-dark;
+  prefix: daisy-;
+  logs: false;
+}
+
+@plugin "daisyui/theme" {
+  name: "phichai";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f7f6f8;
+  --color-base-300: #e9e7ec;
+  --color-base-content: #17151f;
+  --color-primary: #191720;
+  --color-primary-content: #ffffff;
+  --color-secondary: #ea4c89;
+  --color-secondary-content: #ffffff;
+  --color-accent: #d8f05a;
+  --color-accent-content: #17151f;
+  --color-neutral: #191720;
+  --color-neutral-content: #ffffff;
+  --color-info: #6f6b78;
+  --color-info-content: #ffffff;
+  --color-success: #eaf7c4;
+  --color-success-content: #3e5f00;
+  --color-warning: #fff1c7;
+  --color-warning-content: #5f4700;
+  --color-error: #c83b58;
+  --color-error-content: #ffffff;
+  --radius-selector: 999px;
+  --radius-field: 12px;
+  --radius-box: 18px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "phichai-dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: #111018;
+  --color-base-200: #1b1822;
+  --color-base-300: #3a3544;
+  --color-base-content: #f7f3fa;
+  --color-primary: #d8f05a;
+  --color-primary-content: #17151f;
+  --color-secondary: #f27aa8;
+  --color-secondary-content: #17151f;
+  --color-accent: #d8f05a;
+  --color-accent-content: #17151f;
+  --color-neutral: #2a2634;
+  --color-neutral-content: #ffffff;
+  --color-info: #b4adbf;
+  --color-info-content: #17151f;
+  --color-success: #b8d85b;
+  --color-success-content: #172000;
+  --color-warning: #f2cd72;
+  --color-warning-content: #302100;
+  --color-error: #ff8ba3;
+  --color-error-content: #3a0715;
+  --radius-selector: 999px;
+  --radius-field: 12px;
+  --radius-box: 18px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
 @source "./directory.html";
 
 @theme {
@@ -17,10 +93,6 @@
 }
 
 @layer base {
-  :root {
-    color-scheme: light;
-  }
-
   body {
     @apply antialiased;
   }
