@@ -24,8 +24,12 @@ describe("public directory UI v0", () => {
     expect(source).toContain('role="listbox"');
     expect(source).toContain("data-select-for");
     expect(source).toContain("gsap@3.13.0/dist/gsap.min.js");
+    expect(source).toContain("gsap@3.13.0/dist/ScrollTrigger.min.js");
     expect(source).toContain("gsap-ready");
     expect(source).toContain("stagger: 0.035");
+    expect(source).toContain("registerPlugin(window.ScrollTrigger)");
+    expect(source).toContain("scrub: 1");
+    expect(source).toContain("trigger: '.site-header'");
     expect(source).toContain("prefers-reduced-motion: reduce");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');

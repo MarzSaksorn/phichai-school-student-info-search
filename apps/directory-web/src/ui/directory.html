@@ -214,6 +214,7 @@
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
   <script>
     (() => {
       const reduceMotion = Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -251,6 +252,13 @@
         const cards = grid.querySelectorAll('.result-card');
         window.gsap.fromTo(cards, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.42, stagger: 0.035, ease: 'power3.out', clearProps: 'transform,opacity' });
       };
+      const setupHeaderParallax = () => {
+        if (!canAnimateCards || !window.ScrollTrigger) return;
+        window.gsap.registerPlugin(window.ScrollTrigger);
+        const timeline = window.gsap.timeline({ scrollTrigger: { trigger: '.site-header', start: 'top top', end: '+=520', scrub: 1 } });
+        timeline.to('.site-header', { y: -12, opacity: 0.92, ease: 'none' }).to('.hero-art', { y: -48, ease: 'none' }, '<');
+      };
+      setupHeaderParallax();
       const renderCards = (items, append = false) => {
         if (!append && items.length === 0) { renderEmpty('ไม่พบชื่อที่ตรงกัน', 'ลองพิมพ์ชื่อบางส่วน หรือเลือกชั้นเรียนใหม่'); return; }
         const start = append ? rendered : 0;
