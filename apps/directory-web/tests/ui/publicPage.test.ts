@@ -7,7 +7,7 @@ const source = readFileSync(resolve(import.meta.dirname, "../../src/ui/directory
 describe("public directory UI v0", () => {
   it("has accessible language, landmark, skip-link, labels, and result status regions", () => {
     expect(source).toMatch(/<html lang="th" data-theme="phichai">/u);
-    expect(source).toContain("<title>STDPhichai Search, หานักเรียนพิชัย</title>");
+    expect(source).toContain("<title>STDPhichai Search</title>");
     expect(source).toContain('name="description" content="STDPhichai Search, หานักเรียนพิชัยจากข้อมูลที่โรงเรียนอนุมัติ ค้นหาด้วยชื่อหรือเลขประจำตัว ชั้นเรียน และห้องเรียน"');
     expect(source).toContain('href="#main-content"');
     expect(source).toContain('id="main-content"');
