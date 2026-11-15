@@ -23,6 +23,10 @@ paths:
         - { name: grade, in: query, schema: { type: string, maxLength: 20 } }
         - { name: room, in: query, schema: { type: string, maxLength: 20 } }
         - { name: status, in: query, schema: { type: string, maxLength: 80 } }
+        - name: recordType
+          in: query
+          description: Optional record-type filter. Use student for students only or staff for teachers and other published school staff; student-only filters do not constrain staff results.
+          schema: { type: string, enum: [student, staff] }
         - name: department
           in: query
           description: Exact staff department/subject match. When supplied, results contain staff only.

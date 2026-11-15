@@ -25,7 +25,7 @@ type PublicStaffItem = {
   publishedAt: string;
 };
 
-export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; department?: string; cursor?: string; pageSize: number };
+export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; department?: string; recordType?: "student" | "staff"; cursor?: string; pageSize: number };
 export type PublicSearchOutput = { items: Array<PublicStudentItem | PublicStaffItem>; total: number; nextCursor?: string; datasetVersion: string; publishedAt: string; departments: string[] };
 
 const SUMMARY_NOTE_PATTERN = /ณ\s*วันที่|จำนวนนักเรียน|นักเรียนทั้งหมด|รวมทั้งสิ้น/u;
@@ -122,7 +122,8 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
   if (input.status) studentQuery = studentQuery.eq("status", clean(input.status));
 
   const students: RosterRow[] = [];
-  if (!department) {
+  const shouldIncludeStudents = input.recordType !== "staff" && (!department || input.recordType === "student");
+  if (shouldIncludeStudents) {
     for (let fetchOffset = 0; ; fetchOffset += ROSTER_FETCH_PAGE) {
       const { data, error } = await studentQuery.range(fetchOffset, fetchOffset + ROSTER_FETCH_PAGE - 1);
       if (error) throw new Error("SEARCH_UNAVAILABLE");
@@ -142,7 +143,8 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
     allStaffRows = (data ?? []) as StaffRow[];
   }
   const departments = [...new Set(allStaffRows.map((row) => clean(row.department ?? "")).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th-TH"));
-  const shouldIncludeStaff = Boolean(department) || (!input.academicYear && !input.grade && !input.room && !input.status);
+  const hasStudentFilters = Boolean(input.academicYear || input.grade || input.room || input.status);
+  const shouldIncludeStaff = input.recordType === "staff" || (input.recordType !== "student" && (Boolean(department) || !hasStudentFilters));
   const staff = shouldIncludeStaff ? allStaffRows.filter((row) => staffMatches(row, q) && (!department || clean(row.department ?? "") === department)) : [];
 
   const publishedAt = active.published_at ?? active.created_at;

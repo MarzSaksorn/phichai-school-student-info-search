@@ -112,6 +112,25 @@ describe("public student number search API", () => {
     expect(staff).not.toHaveProperty("email");
   });
 
+  it("filters explicitly to students even when a staff-only department is also present", async () => {
+    state.staffPublication = { id: "staff-publication-1", published_at: "2026-11-15T00:00:00.000Z" };
+    const result = await searchPublishedStudents({ q: "", recordType: "student", department: "คณิตศาสตร์", pageSize: 20 });
+
+    expect(result.total).toBe(4);
+    expect(result.items).toHaveLength(4);
+    expect(result.items.every((item) => item.recordType === "student")).toBe(true);
+    expect(result.departments).toEqual(["คณิตศาสตร์", "วิทยาศาสตร์"]);
+  });
+
+  it("filters to staff and ignores student-only filters before pagination", async () => {
+    state.staffPublication = { id: "staff-publication-1", published_at: "2026-11-15T00:00:00.000Z" };
+    const result = await searchPublishedStudents({ q: "", recordType: "staff", academicYear: "2569", grade: "ม.1", room: "1", status: "ปกติ", pageSize: 20 });
+
+    expect(result.total).toBe(2);
+    expect(result.items).toHaveLength(2);
+    expect(result.items.every((item) => item.recordType === "staff")).toBe(true);
+  });
+
   it("filters exactly by department, excludes students, and returns every active department option", async () => {
     state.staffPublication = { id: "staff-publication-1", published_at: "2026-11-15T00:00:00.000Z" };
     const result = await searchPublishedStudents({ q: "", department: "คณิตศาสตร์", pageSize: 20 });

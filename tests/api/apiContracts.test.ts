@@ -34,10 +34,16 @@ describe("Vercel API contracts", () => {
     const openapi = read("docs/api/openapi.yaml");
     expect(route).toContain('params.get("department")');
     expect(route).toContain("department.length > 120");
+    expect(route).toContain('params.get("recordType")');
+    expect(route).toContain("recordTypeValue !== \"student\" && recordTypeValue !== \"staff\"");
     expect(search).toContain("department?: string");
+    expect(search).toContain('recordType?: "student" | "staff"');
+    expect(search).toContain('input.recordType === "staff"');
     expect(search).toContain("departments: string[]");
     expect(search).toContain("clean(row.department ?? \"\") === department");
     expect(openapi).toContain("Exact staff department/subject match");
+    expect(openapi).toContain("recordType");
+    expect(openapi).toContain("enum: [student, staff]");
     expect(openapi).toContain("Distinct departments available in the active public staff publication");
   });
 

@@ -83,7 +83,7 @@ function page(datasetVersion = "approved-fixture-v1", cursor?: string): SearchBo
 }
 
 function harness(responder?: Responder, withObserver = true) {
-  const selectors = ["#search-form", "#result-region", "#result-count", "#status-line", "#load-more", "#query", "#art-stats", "#academic-year", "#grade", "#room", "#status", "#department", "#department-options"];
+  const selectors = ["#search-form", "#result-region", "#result-count", "#status-line", "#load-more", "#query", "#art-stats", "#academic-year", "#grade", "#room", "#status", "#department", "#department-options", "#record-type"];
   const elements = Object.fromEntries(selectors.map((selector) => [selector, fakeElement(selector.slice(1))]));
   const urls: string[] = [];
   const signals: Array<AbortSignal | undefined> = [];
@@ -122,7 +122,7 @@ function harness(responder?: Responder, withObserver = true) {
     window: fakeWindow,
     document: {
       querySelector: (selector: string) => elements[selector] ?? fakeElement(),
-      querySelectorAll: (selector: string) => selector === "#academic-year, #grade, #room, #status, #department" ? [elements["#academic-year"], elements["#grade"], elements["#room"], elements["#status"], elements["#department"]] : []
+      querySelectorAll: (selector: string) => selector === "#academic-year, #grade, #room, #status, #department, #record-type" ? [elements["#academic-year"], elements["#grade"], elements["#room"], elements["#status"], elements["#department"], elements["#record-type"]] : []
     },
     fetch: fetcher,
     URLSearchParams,
@@ -140,6 +140,7 @@ function harness(responder?: Responder, withObserver = true) {
     async flush() { await new Promise<void>((done) => setImmediate(done)); },
     async submit() { elements["#search-form"]?.dispatch("submit"); await this.flush(); },
     async selectDepartment(value: string) { elements["#department"]!.value = value; elements["#department"]?.dispatch("change"); await this.flush(); },
+    async selectRecordType(value: string) { elements["#record-type"]!.value = value; elements["#record-type"]?.dispatch("change"); await this.flush(); },
     departmentUrl() { return new URLSearchParams(fakeLocation.search).get("department"); },
     param(call: number, name: string) { return new URL(urls[call - 1] ?? "", "https://directory.test").searchParams.get(name); }
   };
@@ -169,15 +170,17 @@ describe("public directory response cache and progressive loading", () => {
     await pageUnderTest.submit();
     pageUnderTest.elements["#status"]!.value = "ปกติ";
     await pageUnderTest.submit();
-    expect(pageUnderTest.urls).toHaveLength(6);
-    expect(pageUnderTest.param(6, "q")).toBe("Synthetic query");
-    expect(pageUnderTest.param(6, "grade")).toBe("ม.2");
-    expect(pageUnderTest.param(6, "room")).toBe("2");
-    expect(pageUnderTest.param(6, "academicYear")).toBe("2569");
-    expect(pageUnderTest.param(6, "status")).toBe("ปกติ");
+    await pageUnderTest.selectRecordType("staff");
+    expect(pageUnderTest.urls).toHaveLength(7);
+    expect(pageUnderTest.param(7, "q")).toBe("Synthetic query");
+    expect(pageUnderTest.param(7, "recordType")).toBe("staff");
+    expect(pageUnderTest.param(7, "grade")).toBeNull();
+    expect(pageUnderTest.param(7, "room")).toBeNull();
+    expect(pageUnderTest.param(7, "academicYear")).toBeNull();
+    expect(pageUnderTest.param(7, "status")).toBeNull();
     // Repeating the complete combination now hits its own existing entry.
     await pageUnderTest.submit();
-    expect(pageUnderTest.urls).toHaveLength(6);
+    expect(pageUnderTest.urls).toHaveLength(7);
   });
 
   it("sends the chosen subject filter on search and every cursor page", async () => {
@@ -191,11 +194,32 @@ describe("public directory response cache and progressive loading", () => {
     expect(pageUnderTest.param(2, "status")).toBeNull();
     expect(pageUnderTest.elements["#grade"]?.value).toBe("");
     expect(pageUnderTest.elements["#status"]?.value).toBe("");
+    expect(pageUnderTest.param(2, "recordType")).toBe("staff");
     expect(pageUnderTest.departmentUrl()).toBe("คณิตศาสตร์");
     pageUnderTest.elements["#load-more"]?.dispatch("click");
     await pageUnderTest.flush();
     expect(pageUnderTest.param(3, "department")).toBe("คณิตศาสตร์");
+    expect(pageUnderTest.param(3, "recordType")).toBe("staff");
     expect(pageUnderTest.param(3, "cursor")).toBe("approved-fixture-cursor-2");
+  });
+
+  it("filters by student or teacher/staff type and keeps the selected type on cursor pages", async () => {
+    const pageUnderTest = harness(async (url) => response(page("approved-fixture-v1", url.searchParams.has("cursor") ? undefined : "approved-fixture-cursor-2")));
+    await pageUnderTest.flush();
+    await pageUnderTest.selectDepartment("คณิตศาสตร์");
+    expect(pageUnderTest.param(2, "recordType")).toBe("staff");
+
+    await pageUnderTest.selectRecordType("student");
+    expect(pageUnderTest.param(3, "recordType")).toBe("student");
+    expect(pageUnderTest.param(3, "department")).toBeNull();
+    expect(pageUnderTest.departmentUrl()).toBeNull();
+
+    await pageUnderTest.selectRecordType("staff");
+    expect(pageUnderTest.param(4, "recordType")).toBe("staff");
+    pageUnderTest.elements["#load-more"]?.dispatch("click");
+    await pageUnderTest.flush();
+    expect(pageUnderTest.param(5, "recordType")).toBe("staff");
+    expect(pageUnderTest.param(5, "cursor")).toBe("approved-fixture-cursor-2");
   });
 
   it("expires cached pages after the short TTL", async () => {
