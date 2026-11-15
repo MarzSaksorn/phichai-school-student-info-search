@@ -14,6 +14,11 @@ describe("protected admin directory UI", () => {
     expect(source).toContain('type="file" multiple');
     expect(source).toContain("M.1–M.6");
     expect(source).toContain('role="status" aria-live="polite"');
+    expect(source).toContain('id="staff-snapshot-form"');
+    expect(source).toContain('id="staff-snapshot-file"');
+    expect(source).toContain('accept=".html,text/html"');
+    expect(source).toContain('id="staff-captured-at"');
+    expect(source).toContain('id="staff-source-url"');
   });
 
   it("wires upload, status, publish, and rollback operations to protected endpoints", () => {
@@ -25,6 +30,8 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("window.confirm");
     expect(source).toContain("เลขประจำตัวนักเรียนสู่สาธารณะ");
     expect(source).toContain("authPassword.defaultValue = ''");
+    expect(source).toContain("/api/admin/staff-snapshots");
+    expect(source).toContain("staff-review-link");
   });
 
   it("keeps raw row values out of the admin UI and includes safe failure states", () => {
@@ -32,6 +39,7 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("ADMIN_ROLE_REQUIRED");
     expect(source).toContain("เชื่อมต่อระบบผู้ดูแลไม่ได้");
     expect(source).toContain("prefers-reduced-motion:reduce");
+    expect(source).toContain("โหมดตรวจสอบเท่านั้น");
   });
 
   it("keeps admin controls readable on narrow screens", () => {
@@ -39,5 +47,7 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("@media (max-width:420px)");
     expect(source).toContain(".metric-grid{grid-template-columns:1fr}");
     expect(source).toContain(".meta-row strong{max-width:58%;overflow-wrap:anywhere}");
+    expect(source).toContain(".layout,.staff-layout{grid-template-columns:1fr}");
+    expect(source).toContain(".status-panel,.staff-status-panel{order:-1}");
   });
 });
