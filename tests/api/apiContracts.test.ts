@@ -12,6 +12,9 @@ describe("Vercel API contracts", () => {
     expect(existsSync(resolve(root, "api/admin/imports/[jobId].ts"))).toBe(true);
     expect(existsSync(resolve(root, "api/admin/imports/[jobId]/publish.ts"))).toBe(true);
     expect(existsSync(resolve(root, "api/admin/versions/[versionId]/rollback.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "api/admin/staff-snapshots.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "api/admin/staff-snapshots/[snapshotId].ts"))).toBe(true);
+    expect(existsSync(resolve(root, "api/admin/staff-snapshots/[snapshotId]/approve.ts"))).toBe(true);
   });
 
   it("includes the approved public number but omits restricted source fields", () => {
@@ -51,5 +54,21 @@ describe("Vercel API contracts", () => {
     expect(config).toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(auth).toContain("app_metadata?.role");
     expect(auth).not.toContain("user_metadata");
+  });
+
+  it("keeps staff snapshots private and blocks activation behind explicit approval flags", () => {
+    const upload = read("api/admin/staff-snapshots.ts");
+    const approval = read("api/admin/staff-snapshots/[snapshotId]/approve.ts");
+    const status = read("api/admin/staff-snapshots/[snapshotId].ts");
+    const migration = read("apps/directory-worker/src/db/migrations/009_staff_snapshot_review.sql");
+    expect(upload).toContain("STAFF_SNAPSHOT_IMPORT_ENABLED");
+    expect(upload).toContain('process.env.STAFF_SNAPSHOT_IMPORT_ENABLED === "false"');
+    expect(upload).toContain("publishable: false");
+    expect(upload).toContain('from("directory-raw")');
+    expect(approval).toContain("STAFF_SNAPSHOT_APPROVAL_ENABLED");
+    expect(approval).toContain("publishable: false");
+    expect(status).toContain("staff_snapshot_records");
+    expect(migration).toContain("revoke all on directory.staff_snapshot_records from anon, authenticated");
+    expect(migration).toContain("alter table directory.staff_snapshot_jobs enable row level security");
   });
 });

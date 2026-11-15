@@ -1,0 +1,81 @@
+import { describe, expect, it } from "vitest";
+import {
+  STAFF_SNAPSHOT_SCHEMA_VERSION,
+  STAFF_SNAPSHOT_URL,
+  normalizeStaffText,
+  normalizeStaffRow,
+  parseStaffSnapshot
+} from "../../src/import/staffSnapshot.js";
+
+const context = {
+  snapshotId: "snapshot-2026-11-15",
+  sourceUrl: STAFF_SNAPSHOT_URL,
+  capturedAt: "2026-11-15T03:00:00.000Z",
+  fileName: "staff-snapshot-2026-11-15.html"
+};
+
+const card = (name: string, category: string, title = "") => `
+  <div class="cursor-pointer bg-white rounded-2xl">
+    <div class="space-y-0.5 min-w-0">
+      <h4 class="text-xs sm:text-sm font-bold text-slate-800">${name}</h4>
+      <p class="text-[10px] text-indigo-600 font-semibold">${category}</p>
+      <p class="text-[9px] text-slate-400">${title}</p>
+    </div>
+  </div>`;
+
+describe("staff HTML snapshot review parser", () => {
+  it("extracts approved display fields and keeps the result review-only", () => {
+    const review = parseStaffSnapshot(
+      `<main>${card("นางสาว ตัวอย่าง ใจดี", "ครู", "ชำนาญการพิเศษ")}${card("Mr. Example", "ภาษาต่างประเทศ")}</main>`,
+      context
+    );
+
+    expect(review.schemaVersion).toBe(STAFF_SNAPSHOT_SCHEMA_VERSION);
+    expect(review.acceptedCount).toBe(2);
+    expect(review.rejectedCount).toBe(0);
+    expect(review.readyForReview).toBe(true);
+    expect(review.publishable).toBe(false);
+    expect(review.records[0]).toMatchObject({
+      recordType: "staff",
+      displayName: "นางสาว ตัวอย่าง ใจดี",
+      category: "ครู",
+      sourceSheet: "school-staff",
+      sourceRow: 1
+    });
+    expect(review.records[0]?.title).toBe(normalizeStaffText("ชำนาญการพิเศษ"));
+    expect(review.records[0]).not.toHaveProperty("rawHtml");
+  });
+
+  it("reports duplicate names as a warning while preserving separate source rows", () => {
+    const review = parseStaffSnapshot(`${card("ครูซ้ำ ชื่อเดิม", "ครู")}${card("ครูซ้ำ ชื่อเดิม", "ครู")}`, context);
+
+    expect(review.acceptedCount).toBe(2);
+    expect(review.issues).toContainEqual(expect.objectContaining({ code: "STAFF_DUPLICATE_NAME", severity: "warning", ordinal: 2 }));
+    expect(review.records[0]?.publicId).not.toBe(review.records[1]?.publicId);
+  });
+
+  it("rejects cards missing a category and does not become ready for review", () => {
+    const review = parseStaffSnapshot(`${card("มีชื่อ แต่ไม่มีหมวด", "")}`, context);
+
+    expect(review.acceptedCount).toBe(0);
+    expect(review.rejectedCount).toBe(1);
+    expect(review.readyForReview).toBe(false);
+    expect(review.issues[0]).toMatchObject({ code: "STAFF_CARD_INVALID", severity: "error" });
+  });
+
+  it("rejects an unsupported source URL before parsing", () => {
+    expect(() => parseStaffSnapshot(card("Example", "ครู"), { ...context, sourceUrl: "https://example.com/staff" })).toThrow(/Unsupported staff snapshot URL/);
+  });
+
+  it("normalizes whitespace and never emits a raw source value", () => {
+    const record = normalizeStaffRow(
+      { displayName: "  ครู   ตัวอย่าง ", category: " ครู ", title: " " },
+      context,
+      4
+    );
+
+    expect(record.displayName).toBe("ครู ตัวอย่าง");
+    expect(record.category).toBe("ครู");
+    expect(record).not.toHaveProperty("raw");
+  });
+});

@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Phichai School Directory API
   version: 1.1.0
-  description: Server-only Vercel API for the public student directory and protected import lifecycle.
+  description: Server-only Vercel API for the public student directory, protected student imports, and review-only staff snapshots.
 servers:
   - url: /
 paths:
@@ -65,6 +65,52 @@ paths:
         '200': { description: Safe import status and validation issues }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/staff-snapshots:
+    post:
+      operationId: uploadStaffSnapshot
+      security: [{ bearerAuth: [] }]
+      description: >-
+        Uploads an operator-provided HTML snapshot for private review. This endpoint never
+        fetches the school website and is enabled by default; set STAFF_SNAPSHOT_IMPORT_ENABLED=false to disable it.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [snapshot, sourceUrl, capturedAt]
+              properties:
+                snapshot: { type: string, format: binary, description: HTML snapshot of the approved staff page }
+                sourceUrl: { type: string, const: https://main.phichai.ac.th/school-staff }
+                capturedAt: { type: string, format: date-time }
+      responses:
+        '201': { description: Private snapshot validation report; publishable is always false }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { description: Snapshot exceeds 8 MiB }
+  /api/admin/staff-snapshots/{snapshotId}:
+    get:
+      operationId: getStaffSnapshotReview
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: snapshotId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200': { description: Restricted snapshot metadata, records, and validation issues }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/staff-snapshots/{snapshotId}/approve:
+    post:
+      operationId: approveStaffSnapshot
+      security: [{ bearerAuth: [] }]
+      description: >-
+        Records publisher approval for a reviewed snapshot. Approval is not public activation;
+        the response remains publishable false until a separately approved staff publication path exists.
+      parameters: [{ name: snapshotId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200': { description: Snapshot approved for a future staff publication implementation }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /api/admin/imports/{jobId}/publish:
     post:
       operationId: publishImport
