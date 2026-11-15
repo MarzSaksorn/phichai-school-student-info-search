@@ -1,13 +1,15 @@
 import { createHash, randomUUID } from "node:crypto";
 import Busboy from "busboy";
 import type { IncomingMessage } from "node:http";
-import { STAFF_SNAPSHOT_SCHEMA_VERSION, STAFF_SNAPSHOT_SOURCE_TYPE, STAFF_SNAPSHOT_URL, parseStaffSnapshot } from "../../apps/directory-worker/src/import/staffSnapshot.js";
 import type { ApiRequest, ApiResponse } from "../_lib/http.js";
 import { bearerToken, json, method, problem } from "../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../_lib/supabase.js";
 
 const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 const HTML_MIME = "text/html";
+const STAFF_SNAPSHOT_SOURCE_TYPE = "staff_web_snapshot_review";
+const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v1";
+const STAFF_SNAPSHOT_URL = "https://main.phichai.ac.th/school-staff";
 
 type SnapshotUpload = {
   bytes: Buffer;
@@ -84,6 +86,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   let stored = false;
   const client = supabaseAdmin();
   try {
+    const { parseStaffSnapshot } = await import("../../apps/directory-worker/src/import/staffSnapshot.js");
     const review = parseStaffSnapshot(upload.bytes.toString("utf8"), {
       snapshotId,
       sourceUrl: upload.sourceUrl,
