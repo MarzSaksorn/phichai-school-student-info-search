@@ -36,7 +36,7 @@ export type NormalizedStaff = {
 };
 
 export type StaffSnapshotIssue = {
-  code: "STAFF_CARD_INVALID" | "STAFF_SNAPSHOT_EMPTY" | "STAFF_DUPLICATE_NAME";
+  code: "STAFF_CARD_INVALID" | "STAFF_CARD_INCOMPLETE" | "STAFF_SNAPSHOT_EMPTY" | "STAFF_DUPLICATE_NAME";
   severity: "error" | "warning";
   ordinal?: number;
   message: string;
@@ -140,11 +140,13 @@ export function parseStaffSnapshot(html: string, context: StaffSnapshotContext):
       names.add(record.displayName);
       records.push(record);
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Staff card is invalid";
+      const incomplete = message === "Staff category is required";
       issues.push({
-        code: "STAFF_CARD_INVALID",
-        severity: "error",
+        code: incomplete ? "STAFF_CARD_INCOMPLETE" : "STAFF_CARD_INVALID",
+        severity: incomplete ? "warning" : "error",
         ordinal,
-        message: error instanceof Error ? error.message : "Staff card is invalid"
+        message: incomplete ? "Staff card has no category and will be excluded from publication" : message
       });
     }
   });

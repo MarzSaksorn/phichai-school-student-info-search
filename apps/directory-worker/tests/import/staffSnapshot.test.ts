@@ -54,13 +54,13 @@ describe("staff HTML snapshot review parser", () => {
     expect(review.records[0]?.publicId).not.toBe(review.records[1]?.publicId);
   });
 
-  it("rejects cards missing a category and does not become ready for review", () => {
-    const review = parseStaffSnapshot(`${card("มีชื่อ แต่ไม่มีหมวด", "")}`, context);
+  it("warns on cards missing a category while keeping valid cards reviewable", () => {
+    const review = parseStaffSnapshot(`${card("มีชื่อที่ใช้ได้", "ครู")}${card("มีชื่อ แต่ไม่มีหมวด", "")}`, context);
 
-    expect(review.acceptedCount).toBe(0);
-    expect(review.rejectedCount).toBe(1);
-    expect(review.readyForReview).toBe(false);
-    expect(review.issues[0]).toMatchObject({ code: "STAFF_CARD_INVALID", severity: "error" });
+    expect(review.acceptedCount).toBe(1);
+    expect(review.rejectedCount).toBe(0);
+    expect(review.readyForReview).toBe(true);
+    expect(review.issues[0]).toMatchObject({ code: "STAFF_CARD_INCOMPLETE", severity: "warning" });
   });
 
   it("rejects an unsupported source URL before parsing", () => {
