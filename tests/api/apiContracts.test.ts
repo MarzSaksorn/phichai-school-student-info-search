@@ -88,5 +88,7 @@ describe("Vercel API contracts", () => {
     expect(publication).toContain("published_staff_records");
     expect(publication).toContain("publicFields");
     expect(publication).toContain("publish_staff_snapshot");
+    expect(publication).toContain("publication.snapshot_id = p_snapshot_id");
+    expect(publication).toContain("source_record.snapshot_id = p_snapshot_id");
   });
 });

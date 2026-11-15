@@ -71,8 +71,8 @@ begin
 
   if v_snapshot.status = 'approved' then
     select * into v_publication
-    from directory.staff_publication_versions
-    where snapshot_id = p_snapshot_id;
+    from directory.staff_publication_versions as publication
+    where publication.snapshot_id = p_snapshot_id;
     if not found then
       raise exception 'STAFF_PUBLICATION_MISSING' using errcode = '55000';
     end if;
@@ -103,8 +103,8 @@ begin
   )
   select
     v_publication.id, public_id, display_name, search_name, category, title
-  from directory.staff_snapshot_records
-  where snapshot_id = p_snapshot_id;
+  from directory.staff_snapshot_records as source_record
+  where source_record.snapshot_id = p_snapshot_id;
 
   select count(*) into v_record_count
   from directory.published_staff_records
