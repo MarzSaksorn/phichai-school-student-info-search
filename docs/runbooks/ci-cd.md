@@ -26,6 +26,15 @@ Configure these Vercel **Environment Variables** for Preview and Production. Nev
 
 - `SUPABASE_URL` — the project HTTPS URL.
 - `SUPABASE_SERVICE_ROLE_KEY` — the server-only service-role key. `SUPABASE_KEY` is accepted as a compatibility fallback in the handler, but the explicit service-role name is preferred.
+- `SUPABASE_ANON_KEY` — the public Supabase anon or publishable key used by the preview admin login. This key is intentionally returned by `/api/auth/config`; never put the service-role key here.
+
+For Preview, set all three variables in the Vercel project under **Settings → Environment Variables → Preview**, then redeploy the preview. The admin login uses Supabase Auth password sign-in and does not work until `SUPABASE_ANON_KEY` exists. Verify the deployment with:
+
+```sh
+curl -i https://<preview-domain>/api/auth/config
+```
+
+A configured preview returns `200`, `cache-control: no-store`, the project URL, and the public anon key. A `503 AUTH_NOT_CONFIGURED` means the Preview environment variable is missing. Never paste or expose `SUPABASE_SERVICE_ROLE_KEY` in the browser.
 
 The deployed API surface is `GET /api/search`, `POST /api/admin/imports`, `GET /api/admin/imports/{jobId}`, `POST /api/admin/imports/{jobId}/publish`, and `POST /api/admin/versions/{versionId}/rollback`. Admin endpoints require a Supabase Auth bearer token whose `app_metadata.role` is one of `importer`, `publisher`, `operator`, or `owner`. Public responses follow the active version's approved field configuration: the school-approved policy exposes `studentNumber` and permits exact-number search, while source paths, filenames, sheet/row traces, raw workbook values, and private metadata remain restricted.
 

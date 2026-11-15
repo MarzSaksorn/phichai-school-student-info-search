@@ -6,8 +6,12 @@ export default function handler(request: ApiRequest, response: ApiResponse): voi
   const supabaseUrl = process.env.SUPABASE_URL?.trim();
   const anonKey = process.env.SUPABASE_ANON_KEY?.trim();
   if (!supabaseUrl || !anonKey) {
-    problem(response, 503, "INTERNAL_ERROR", "Public authentication is not configured");
+    problem(response, 503, "AUTH_NOT_CONFIGURED", "Preview admin login needs SUPABASE_URL and SUPABASE_ANON_KEY in the Vercel environment");
     return;
   }
-  json(response, 200, { supabaseUrl, anonKey });
+  if (anonKey === process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
+    problem(response, 500, "INTERNAL_ERROR", "The public authentication key is misconfigured");
+    return;
+  }
+  json(response, 200, { supabaseUrl, anonKey }, { "cache-control": "no-store" });
 }

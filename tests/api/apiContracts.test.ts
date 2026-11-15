@@ -15,6 +15,7 @@ describe("Vercel API contracts", () => {
     expect(existsSync(resolve(root, "api/admin/staff-snapshots.ts"))).toBe(true);
     expect(existsSync(resolve(root, "api/admin/staff-snapshots/[snapshotId].ts"))).toBe(true);
     expect(existsSync(resolve(root, "api/admin/staff-snapshots/[snapshotId]/approve.ts"))).toBe(true);
+    expect(existsSync(resolve(root, "api/auth/config.ts"))).toBe(true);
   });
 
   it("includes the approved public number but omits restricted source fields", () => {
@@ -54,6 +55,15 @@ describe("Vercel API contracts", () => {
     expect(config).toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(auth).toContain("app_metadata?.role");
     expect(auth).not.toContain("user_metadata");
+  });
+
+  it("keeps preview admin login on the public Supabase key", () => {
+    const authConfig = read("api/auth/config.ts");
+    expect(authConfig).toContain("SUPABASE_ANON_KEY");
+    expect(authConfig).toContain("AUTH_NOT_CONFIGURED");
+    expect(authConfig).toContain('"cache-control": "no-store"');
+    expect(authConfig).toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(authConfig).not.toContain("serviceRoleKey");
   });
 
   it("keeps staff source snapshots private and publishes only approved staff fields", () => {
