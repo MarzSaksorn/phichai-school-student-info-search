@@ -75,9 +75,12 @@ describe("public directory UI v0", () => {
     expect(source).toContain("escapeHtml(item.displayName)");
     expect(source).toContain("item.studentNumber");
     expect(source).toContain("escapeHtml(item.studentNumber)");
+    expect(source).toContain("studentEmail");
+    expect(source).toContain("@phichai.ac.th");
+    expect(source).toContain("safeMailtoHref(emailAddress)");
     expect(source).toContain("escapeHtml(item.department)");
-    expect(source).toContain("safeMailtoHref(item.email)");
-    expect(source).toContain("escapeHtml(item.email)");
+    expect(source).toContain("safeMailtoHref(emailAddress)");
+    expect(source).toContain("escapeHtml(emailAddress)");
     expect(source).toContain("email-meta");
     expect(source).toContain("เลขประจำตัว");
     expect(source).toContain(".result-meta span:first-child { background: var(--pink-soft); color: var(--pink);");

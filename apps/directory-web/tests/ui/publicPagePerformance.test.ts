@@ -316,8 +316,10 @@ describe("public directory response cache and progressive loading", () => {
   it("keeps the approved output fields and avoids persistent browser storage", () => {
     expect(script).toContain("escapeHtml(item.displayName)");
     expect(script).toContain("escapeHtml(item.studentNumber)");
-    expect(script).toContain("safeMailtoHref(item.email)");
-    expect(script).toContain("escapeHtml(item.email)");
+    expect(script).toContain("studentEmail");
+    expect(script).toContain("@phichai.ac.th");
+    expect(script).toContain("safeMailtoHref(emailAddress)");
+    expect(script).toContain("escapeHtml(emailAddress)");
     expect(script).not.toContain("studentIdentifier");
     expect(script).not.toMatch(/localStorage\s*(?:\.|\[)|sessionStorage\s*(?:\.|\[)|indexedDB\s*\./u);
     expect(source).toContain("pageSize");
@@ -336,5 +338,34 @@ describe("public directory response cache and progressive loading", () => {
     const rendered = pageUnderTest.elements["#result-region"]?.innerHTML ?? "";
     expect(rendered).toContain('href="mailto:teacher%2Bqa@example.ac.th"');
     expect(rendered).toContain(">teacher+qa@example.ac.th</a>");
+  });
+
+  it("renders a derived student email as a safe mailto link for a five-digit public number", async () => {
+    const pageUnderTest = harness(async () => response({
+      items: [{ publicId: "student-synthetic", recordType: "student", displayName: "Synthetic Student", studentNumber: "00042", grade: "ม.1", room: "1", academicYear: "2569" }],
+      total: 1,
+      datasetVersion: "approved-fixture-v1",
+      publishedAt: "2026-01-01T00:00:00.000Z",
+      departments: []
+    }));
+    await pageUnderTest.flush();
+
+    const rendered = pageUnderTest.elements["#result-region"]?.innerHTML ?? "";
+    expect(rendered).toContain('href="mailto:std00042@phichai.ac.th"');
+    expect(rendered).toContain(">std00042@phichai.ac.th</a>");
+  });
+
+  it("does not derive a student email from an identifier that is not exactly five digits", async () => {
+    const pageUnderTest = harness(async () => response({
+      items: [{ publicId: "student-synthetic", recordType: "student", displayName: "Synthetic Student", studentNumber: "1234", grade: "ม.1", room: "1", academicYear: "2569" }],
+      total: 1,
+      datasetVersion: "approved-fixture-v1",
+      publishedAt: "2026-01-01T00:00:00.000Z",
+      departments: []
+    }));
+    await pageUnderTest.flush();
+
+    const rendered = pageUnderTest.elements["#result-region"]?.innerHTML ?? "";
+    expect(rendered).not.toContain("@phichai.ac.th");
   });
 });
