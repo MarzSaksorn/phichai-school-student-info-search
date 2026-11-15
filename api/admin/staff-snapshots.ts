@@ -7,6 +7,7 @@ import { authenticatedActor, supabaseAdmin } from "../_lib/supabase.js";
 
 const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 const HTML_MIME = "text/html";
+const STAFF_SNAPSHOT_BUCKET = "directory-staff-raw";
 const STAFF_SNAPSHOT_SOURCE_TYPE = "staff_web_snapshot_review";
 const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v1";
 const STAFF_SNAPSHOT_URL = "https://main.phichai.ac.th/school-staff";
@@ -94,7 +95,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       fileName: upload.filename,
       schemaVersion: STAFF_SNAPSHOT_SCHEMA_VERSION
     });
-    const storage = await client.storage.from("directory-raw").upload(storagePath, upload.bytes, { contentType: HTML_MIME, cacheControl: "0", upsert: false });
+    const storage = await client.storage.from(STAFF_SNAPSHOT_BUCKET).upload(storagePath, upload.bytes, { contentType: HTML_MIME, cacheControl: "0", upsert: false });
     if (storage.error) throw new Error("STORAGE_ERROR");
     stored = true;
 
@@ -158,7 +159,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     });
   } catch (error) {
     if (stored) {
-      try { await client.storage.from("directory-raw").remove([storagePath]); } catch { /* best-effort compensation */ }
+      try { await client.storage.from(STAFF_SNAPSHOT_BUCKET).remove([storagePath]); } catch { /* best-effort compensation */ }
     }
     const code = error instanceof Error ? error.message : "INTERNAL_ERROR";
     problem(response, code === "STORAGE_ERROR" ? 503 : 500, code === "STORAGE_ERROR" ? "INTERNAL_ERROR" : "INTERNAL_ERROR", code === "STORAGE_ERROR" ? "Private snapshot storage is unavailable." : "Staff snapshot review could not be recorded.");

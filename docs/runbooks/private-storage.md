@@ -9,11 +9,19 @@ Create or verify the bucket in the Supabase Dashboard under **Storage**:
 - Bucket name: `directory-raw`
 - Public bucket: disabled
 - File size limit: `10485760` bytes
-- Allowed MIME type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- **Allowed MIME type:** `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+
+Staff HTML snapshots use a separate bucket so the student import bucket can remain
+XLSX-only:
+
+- Bucket name: `directory-staff-raw`
+- Public bucket: disabled
+- File size limit: `10485760` bytes
+- Allowed MIME type: `text/html`
 
 Alternatively, run the server-only provisioning helper with a service-role key. Do not use `SUPABASE_ANON_KEY`, a publishable key, or a browser-exposed environment variable for bucket administration. The service-role key must remain in Vercel server-side environment variables or the worker secret store.
 
-The code factory is [createSupabasePrivateObjectStore](../../apps/directory-worker/src/storage/createSupabasePrivateObjectStore.ts). It creates a client with session persistence disabled and wires the bucket into [SupabasePrivateObjectStore](../../apps/directory-worker/src/storage/supabasePrivateObjectStore.ts), which refuses to operate if the bucket is public.
+The code factory is [createSupabasePrivateObjectStore](../../apps/directory-worker/src/storage/createSupabasePrivateObjectStore.ts). It creates a client with session persistence disabled and wires the student bucket into [SupabasePrivateObjectStore](../../apps/directory-worker/src/storage/supabasePrivateObjectStore.ts), which refuses to operate if the bucket is public. The staff snapshot route uses `directory-staff-raw` directly and never exposes a public or signed URL.
 
 ## Upload behavior
 
