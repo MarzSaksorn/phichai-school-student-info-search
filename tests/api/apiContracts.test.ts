@@ -56,7 +56,7 @@ describe("Vercel API contracts", () => {
     expect(auth).not.toContain("user_metadata");
   });
 
-  it("keeps staff snapshots private and blocks activation behind explicit approval flags", () => {
+  it("keeps staff source snapshots private and publishes only approved staff fields", () => {
     const upload = read("api/admin/staff-snapshots.ts");
     const approval = read("api/admin/staff-snapshots/[snapshotId]/approve.ts");
     const status = read("api/admin/staff-snapshots/[snapshotId].ts");
@@ -69,9 +69,14 @@ describe("Vercel API contracts", () => {
     expect(upload).toContain('STAFF_SNAPSHOT_BUCKET = "directory-staff-raw"');
     expect(upload).toContain('from(STAFF_SNAPSHOT_BUCKET)');
     expect(approval).toContain("STAFF_SNAPSHOT_APPROVAL_ENABLED");
-    expect(approval).toContain("publishable: false");
+    expect(approval).toContain("publish_staff_snapshot");
+    expect(approval).toContain("publishable: true");
     expect(status).toContain("staff_snapshot_records");
     expect(migration).toContain("revoke all on directory.staff_snapshot_records from anon, authenticated");
     expect(migration).toContain("alter table directory.staff_snapshot_jobs enable row level security");
+    const publication = read("apps/directory-worker/src/db/migrations/011_staff_publication.sql");
+    expect(publication).toContain("published_staff_records");
+    expect(publication).toContain("publicFields");
+    expect(publication).toContain("publish_staff_snapshot");
   });
 });

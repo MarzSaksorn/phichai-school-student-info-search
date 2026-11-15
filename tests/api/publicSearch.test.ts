@@ -33,7 +33,7 @@ vi.mock("../../api/_lib/supabase.js", () => ({
           filters.set(`${String(column)}__ilike`, value);
           return builder;
         };
-        builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : state.policy, error: null });
+        builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : table === "staff_publication_versions" ? null : state.policy, error: null });
         builder.range = async () => {
           const numberPrefix = filters.get("student_identifier__ilike");
           const rows = numberPrefix

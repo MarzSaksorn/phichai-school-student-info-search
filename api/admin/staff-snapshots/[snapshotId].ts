@@ -41,7 +41,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       reviewedAt: snapshot.reviewed_at,
       createdAt: snapshot.created_at,
       updatedAt: snapshot.updated_at,
-      publishable: false
+      publishable: snapshot.status === "approved",
+      publicFields: snapshot.status === "approved" ? ["displayName", "category", "title"] : []
     },
     issues: issues ?? [],
     records: records ?? []

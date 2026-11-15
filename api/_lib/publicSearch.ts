@@ -2,12 +2,30 @@ import { createHash } from "node:crypto";
 import { allowsStudentNumberSearch, exposesStudentNumber, type ApprovedFieldConfig } from "./publicFieldConfig.js";
 import { supabaseAdmin } from "./supabase.js";
 
-export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; cursor?: string; pageSize: number };
-export type PublicSearchOutput = { items: Array<{ publicId: string; recordType: "student"; displayName: string; studentNumber?: string; academicYear: string; grade: string; room: string; status?: string; publishedAt: string }>; total: number; nextCursor?: string; datasetVersion: string; publishedAt: string };
+type PublicStudentItem = {
+  publicId: string;
+  recordType: "student";
+  displayName: string;
+  studentNumber?: string;
+  academicYear: string;
+  grade: string;
+  room: string;
+  status?: string;
+  publishedAt: string;
+};
 
-// A published record must carry a person's name. Workbook footer notes
-// ("ณ วันที่ ... จำนวนนักเรียนทั้งหมด") are not names, so they are never served
-// even if an older dataset version still contains them.
+type PublicStaffItem = {
+  publicId: string;
+  recordType: "staff";
+  displayName: string;
+  category: string;
+  title?: string;
+  publishedAt: string;
+};
+
+export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; cursor?: string; pageSize: number };
+export type PublicSearchOutput = { items: Array<PublicStudentItem | PublicStaffItem>; total: number; nextCursor?: string; datasetVersion: string; publishedAt: string };
+
 const SUMMARY_NOTE_PATTERN = /ณ\s*วันที่|จำนวนนักเรียน|นักเรียนทั้งหมด|รวมทั้งสิ้น/u;
 
 function clean(value: string): string { return value.normalize("NFKC").trim().replace(/\s+/gu, " "); }
@@ -26,17 +44,16 @@ type RosterRow = {
   status: string | null;
 };
 
-// The public roster is ordered ชั้น (grade) → ห้อง (room) → เพศ (sex, ชายก่อนหญิง)
-// → เลขประจำตัว (student number) → ชื่อ (name). Rooms and student numbers are
-// text columns, so the comparison happens in code where "2" < "10" and
-// "9" < "10" hold numerically; the database cannot express these casts through
-// the public query API.
+type StaffRow = {
+  public_id: string;
+  display_name: string;
+  search_name: string;
+  category: string;
+  title: string | null;
+};
+
 const gradeOrder = (grade: string): number => { const match = /^ม\.(\d+)$/u.exec(grade); return match ? Number(match[1]) : Number.POSITIVE_INFINITY; };
 const numericOrLast = (value: string | null): number => { if (value === null || value === "") return Number.POSITIVE_INFINITY; return /^\d+$/u.test(value) ? Number(value) : Number.POSITIVE_INFINITY; };
-// Sex comes from the public name title (เด็กชาย/นาย vs เด็กหญิง/นางสาว/นาง) —
-// there is no separate column in the approved dataset, and approved workbooks
-// write the title with or without a space. Unknown titles are placed after both
-// groups so the male → female split stays clean.
 const sexOrder = (displayName: string): number => {
   const name = displayName.normalize("NFKC").trim();
   if (/^(?:เด็กชาย|นักเรียนชาย|นาย|ชาย)/u.test(name)) return 0;
@@ -63,15 +80,22 @@ const compareRosterRows = (a: RosterRow, b: RosterRow): number => {
   return a.public_id.localeCompare(b.public_id);
 };
 
+function staffMatches(row: StaffRow, q: string): boolean {
+  if (!q) return true;
+  const needle = q.toLocaleLowerCase("th-TH");
+  return [row.search_name, row.category, row.title ?? ""].some((value) => String(value ?? "").toLocaleLowerCase("th-TH").includes(needle));
+}
+
 export async function searchPublishedStudents(input: PublicSearchInput): Promise<PublicSearchOutput> {
   const q = clean(input.q).toLocaleLowerCase("th-TH");
   const offset = cursorValue(input.cursor);
-  const { data: active, error: activeError } = await supabaseAdmin().schema("directory").from("dataset_versions").select("id,version,published_at,created_at,field_config_version").eq("status", "active").maybeSingle();
+  const client = supabaseAdmin();
+  const { data: active, error: activeError } = await client.schema("directory").from("dataset_versions").select("id,version,published_at,created_at,field_config_version").eq("status", "active").maybeSingle();
   if (activeError) throw new Error("SEARCH_UNAVAILABLE");
   if (!active) throw new Error("NO_ACTIVE_DATASET");
   let fieldConfig: ApprovedFieldConfig | null = null;
   if (active.field_config_version) {
-    const { data, error } = await supabaseAdmin().schema("directory").from("approved_field_config")
+    const { data, error } = await client.schema("directory").from("approved_field_config")
       .select("student_public_fields,student_identifier_search,student_identifier_display")
       .eq("version", active.field_config_version).maybeSingle();
     if (error) throw new Error("SEARCH_UNAVAILABLE");
@@ -79,42 +103,52 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
   }
   const showStudentNumber = exposesStudentNumber(fieldConfig);
   const searchStudentNumber = allowsStudentNumberSearch(fieldConfig);
-  let query = supabaseAdmin()
-    .schema("directory")
-    .from("published_student_records")
+  let studentQuery = client.schema("directory").from("published_student_records")
     .select("public_id,display_name,student_identifier,academic_year,grade,room,status")
     .eq("dataset_version_id", active.id)
     .not("display_name", "ilike", "%ณ วันที่%")
     .not("display_name", "ilike", "%จำนวนนักเรียน%")
     .order("public_id", { ascending: true });
-  // Number lookup is available only when the active version's approved field config allows it.
-  // Digit-only input is treated as a prefix, so "269" matches 26901 through 26999.
-  if (searchStudentNumber && /^\d{1,12}$/u.test(q)) query = query.ilike("student_identifier", `${q}%`);
-  else if (q) query = query.ilike("search_name", `%${q.replace(/[%_]/gu, "\\$&")}%`);
-  if (input.academicYear) query = query.eq("academic_year", clean(input.academicYear));
-  if (input.grade) query = query.eq("grade", clean(input.grade));
-  if (input.room) query = query.eq("room", clean(input.room));
-  if (input.status) query = query.eq("status", clean(input.status));
-  // Fetch every row matching the request filters (paged for the query API's row
-  // limit), then order the full match set so every page follows one roster order.
-  const rows: RosterRow[] = [];
+  if (searchStudentNumber && /^\d{1,12}$/u.test(q)) studentQuery = studentQuery.ilike("student_identifier", `${q}%`);
+  else if (q) studentQuery = studentQuery.ilike("search_name", `%${q.replace(/[%_]/gu, "\\$&")}%`);
+  if (input.academicYear) studentQuery = studentQuery.eq("academic_year", clean(input.academicYear));
+  if (input.grade) studentQuery = studentQuery.eq("grade", clean(input.grade));
+  if (input.room) studentQuery = studentQuery.eq("room", clean(input.room));
+  if (input.status) studentQuery = studentQuery.eq("status", clean(input.status));
+
+  const students: RosterRow[] = [];
   for (let fetchOffset = 0; ; fetchOffset += ROSTER_FETCH_PAGE) {
-    const { data, error } = await query.range(fetchOffset, fetchOffset + ROSTER_FETCH_PAGE - 1);
+    const { data, error } = await studentQuery.range(fetchOffset, fetchOffset + ROSTER_FETCH_PAGE - 1);
     if (error) throw new Error("SEARCH_UNAVAILABLE");
     const page = (data ?? []) as RosterRow[];
-    rows.push(...page);
+    students.push(...page);
     if (page.length < ROSTER_FETCH_PAGE) break;
   }
+  const staff: StaffRow[] = [];
+  if (!input.academicYear && !input.grade && !input.room && !input.status) {
+    const { data: staffPublication, error: staffPublicationError } = await client.schema("directory").from("staff_publication_versions")
+      .select("id,published_at").eq("status", "active").maybeSingle();
+    if (staffPublicationError) throw new Error("SEARCH_UNAVAILABLE");
+    if (staffPublication) {
+      const { data, error } = await client.schema("directory").from("published_staff_records")
+        .select("public_id,display_name,search_name,category,title").eq("publication_version_id", staffPublication.id).order("public_id", { ascending: true }).range(0, 999);
+      if (error) throw new Error("SEARCH_UNAVAILABLE");
+      staff.push(...((data ?? []) as StaffRow[]).filter((row) => staffMatches(row, q)));
+    }
+  }
+
   const publishedAt = active.published_at ?? active.created_at;
-  const roster = rows
+  const studentItems: PublicStudentItem[] = students
     .filter((row) => !SUMMARY_NOTE_PATTERN.test(String(row.display_name ?? "")))
-    .sort(compareRosterRows);
-  const total = roster.length;
-  const items = roster
-    .slice(offset, offset + input.pageSize)
-    .map((row) => ({ publicId: row.public_id, recordType: "student" as const, displayName: row.display_name, ...(showStudentNumber && row.student_identifier ? { studentNumber: String(row.student_identifier) } : {}), academicYear: row.academic_year, grade: row.grade, room: row.room, ...(row.status ? { status: row.status } : {}), publishedAt }));
-  const result: PublicSearchOutput = { items, total, datasetVersion: active.version, publishedAt };
-  if (offset + items.length < total) result.nextCursor = cursorFor(offset + items.length);
+    .sort(compareRosterRows)
+    .map((row) => ({ publicId: row.public_id, recordType: "student", displayName: row.display_name, ...(showStudentNumber && row.student_identifier ? { studentNumber: String(row.student_identifier) } : {}), academicYear: row.academic_year, grade: row.grade, room: row.room, ...(row.status ? { status: row.status } : {}), publishedAt }));
+  const staffItems: PublicStaffItem[] = staff
+    .sort((a, b) => a.display_name.localeCompare(b.display_name, "th-TH") || a.public_id.localeCompare(b.public_id))
+    .map((row) => ({ publicId: row.public_id, recordType: "staff", displayName: row.display_name, category: row.category, ...(row.title ? { title: row.title } : {}), publishedAt }));
+  const allItems: Array<PublicStudentItem | PublicStaffItem> = [...staffItems, ...studentItems];
+  const items = allItems.slice(offset, offset + input.pageSize);
+  const result: PublicSearchOutput = { items, total: allItems.length, datasetVersion: `${active.version}${staffItems.length ? "+staff" : ""}`, publishedAt };
+  if (offset + items.length < allItems.length) result.nextCursor = cursorFor(offset + items.length);
   return result;
 }
 

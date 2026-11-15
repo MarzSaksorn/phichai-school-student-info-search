@@ -33,7 +33,7 @@ vi.mock("../../api/_lib/supabase.js", () => ({
         builder.not = self;
         builder.order = self;
         builder.ilike = (column: unknown, value: unknown) => { pattern = { column: String(column), value: String(value) }; return builder; };
-        builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : state.policy, error: null });
+        builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : table === "staff_publication_versions" ? null : state.policy, error: null });
         builder.range = async (_from: unknown, to: unknown) => {
           const matching = state.rows.filter((row) => filters.every(([column, value]) => {
             if (column === "dataset_version_id") return true;

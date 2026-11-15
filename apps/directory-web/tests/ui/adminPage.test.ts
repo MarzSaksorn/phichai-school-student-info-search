@@ -39,7 +39,9 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("ADMIN_ROLE_REQUIRED");
     expect(source).toContain("เชื่อมต่อระบบผู้ดูแลไม่ได้");
     expect(source).toContain("prefers-reduced-motion:reduce");
-    expect(source).toContain("โหมดตรวจสอบเท่านั้น");
+    expect(source).toContain("นำเข้าและเผยแพร่โดยผู้มีสิทธิ์");
+    expect(source).toContain("staff-publish-button");
+    expect(source).toContain("/approve");
   });
 
   it("keeps admin controls readable on narrow screens", () => {

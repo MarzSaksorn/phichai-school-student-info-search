@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Phichai School Directory API
   version: 1.1.0
-  description: Server-only Vercel API for the public student directory, protected student imports, and review-only staff snapshots.
+  description: Server-only Vercel API for the public student and staff directory, protected imports, and reviewed staff snapshot publication.
 servers:
   - url: /
 paths:
@@ -11,7 +11,7 @@ paths:
       operationId: searchStudents
       security: []
       description: >-
-        Returns published students ordered by roster order. Omitting q and every
+        Returns published students and approved staff ordered by directory order. Omitting q and every
         filter is a browse request that lists the whole published roster, one page
         at a time.
       parameters:
@@ -26,7 +26,7 @@ paths:
         - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
         - { name: cursor, in: query, schema: { type: string } }
       responses:
-        '200': { description: Public student results, content: { application/json: { schema: { $ref: '#/components/schemas/SearchResponse' } } } }
+        '200': { description: Public student and staff results, content: { application/json: { schema: { $ref: '#/components/schemas/SearchResponse' } } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '429': { $ref: '#/components/responses/RateLimited' }
         '503': { $ref: '#/components/responses/Unavailable' }
@@ -84,7 +84,7 @@ paths:
                 sourceUrl: { type: string, const: https://main.phichai.ac.th/school-staff }
                 capturedAt: { type: string, format: date-time }
       responses:
-        '201': { description: Private snapshot validation report; publishable is always false }
+        '201': { description: Private snapshot validation report; publication requires an authorized publisher confirmation }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
@@ -103,11 +103,11 @@ paths:
       operationId: approveStaffSnapshot
       security: [{ bearerAuth: [] }]
       description: >-
-        Records publisher approval for a reviewed snapshot. Approval is not public activation;
-        the response remains publishable false until a separately approved staff publication path exists.
+        Publishes a reviewed staff snapshot through the atomic staff publication function. Only
+        displayName, category, and title become public; raw snapshot data remains private.
       parameters: [{ name: snapshotId, in: path, required: true, schema: { type: string, format: uuid } }]
       responses:
-        '200': { description: Snapshot approved for a future staff publication implementation }
+        '200': { description: Staff snapshot approved and visible in the public directory }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/Conflict' }
@@ -148,12 +148,22 @@ components:
         room: { type: string }
         status: { type: string }
         publishedAt: { type: string, format: date-time }
+    PublicStaff:
+      type: object
+      required: [publicId, recordType, displayName, category, publishedAt]
+      properties:
+        publicId: { type: string }
+        recordType: { type: string, const: staff }
+        displayName: { type: string }
+        category: { type: string }
+        title: { type: string }
+        publishedAt: { type: string, format: date-time }
     SearchResponse:
       type: object
       required: [items, total, datasetVersion, publishedAt]
       properties:
-        items: { type: array, items: { $ref: '#/components/schemas/PublicStudent' } }
-        total: { type: integer, description: Total published students matching the request, across all pages }
+        items: { type: array, items: { oneOf: [{ $ref: '#/components/schemas/PublicStudent' }, { $ref: '#/components/schemas/PublicStaff' }] } }
+        total: { type: integer, description: Total published students and staff matching the request, across all pages }
         nextCursor: { type: string }
         datasetVersion: { type: string }
         publishedAt: { type: string, format: date-time }
