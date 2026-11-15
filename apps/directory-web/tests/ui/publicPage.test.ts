@@ -65,13 +65,17 @@ describe("public directory UI v0", () => {
     expect(source).toContain("ease: 'power2.out'");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');
-    expect(source).toContain('name="grade"');
+    expect(source).toContain('name="status"');
+    expect(source).toContain('name="department"');
+    expect(source).toContain('id="department-options"');
+    expect(source).toContain("'department'");
     expect(source).toContain('name="room"');
     expect(source).toContain("fetch('/api/search?");
     expect(source).toContain("item.displayName");
     expect(source).toContain("escapeHtml(item.displayName)");
     expect(source).toContain("item.studentNumber");
     expect(source).toContain("escapeHtml(item.studentNumber)");
+    expect(source).toContain("escapeHtml(item.department)");
     expect(source).toContain("เลขประจำตัว");
     expect(source).toContain(".result-meta span:first-child { background: var(--pink-soft); color: var(--pink);");
     expect(source).toContain('.status-line[data-tone="success"] { color: color-mix(in srgb, var(--success) 70%, var(--ink)); }');
@@ -92,6 +96,7 @@ describe("public directory UI v0", () => {
     expect(source).toContain("@media (max-width: 720px)");
     expect(source).toContain("@media (max-width: 480px)");
     expect(source).toContain(".search-row { grid-template-columns: 1fr; }");
+    expect(source).toContain(".filter-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));");
     expect(source).toContain(".filter-row { grid-template-columns: 1fr; }");
     expect(source).toContain(".result-grid { grid-template-columns: 1fr; }");
     expect(source).toContain(".header-nav a { white-space: nowrap; }");

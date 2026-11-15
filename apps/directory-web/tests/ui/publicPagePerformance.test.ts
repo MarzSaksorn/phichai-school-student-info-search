@@ -9,6 +9,7 @@ if (!match) throw new Error("Inline public-page script is missing");
 const script = match[1] ?? "";
 
 type FakeElement = {
+  id: string;
   value: string;
   hidden: boolean;
   dataset: Record<string, string>;
@@ -25,8 +26,9 @@ type FakeElement = {
   getBoundingClientRect(): { top: number };
 };
 
-function fakeElement(): FakeElement {
+function fakeElement(id = ""): FakeElement {
   const element: FakeElement = {
+    id,
     value: "",
     hidden: true,
     dataset: {},
@@ -60,6 +62,7 @@ type SearchBody = {
   nextCursor?: string;
   datasetVersion: string;
   publishedAt: string;
+  departments: string[];
 };
 
 type Responder = (url: URL, call: number, init?: { signal?: AbortSignal }) => Promise<{ ok: boolean; json: () => Promise<unknown> }>;
@@ -74,16 +77,19 @@ function page(datasetVersion = "approved-fixture-v1", cursor?: string): SearchBo
     total: 30,
     ...(cursor ? { nextCursor: cursor } : {}),
     datasetVersion,
-    publishedAt: "2026-01-01T00:00:00.000Z"
+    publishedAt: "2026-01-01T00:00:00.000Z",
+    departments: ["คณิตศาสตร์", "วิทยาศาสตร์"]
   };
 }
 
 function harness(responder?: Responder, withObserver = true) {
-  const selectors = ["#search-form", "#result-region", "#result-count", "#status-line", "#load-more", "#query", "#art-stats", "#academic-year", "#grade", "#room", "#status"];
-  const elements = Object.fromEntries(selectors.map((selector) => [selector, fakeElement()]));
+  const selectors = ["#search-form", "#result-region", "#result-count", "#status-line", "#load-more", "#query", "#art-stats", "#academic-year", "#grade", "#room", "#status", "#department", "#department-options"];
+  const elements = Object.fromEntries(selectors.map((selector) => [selector, fakeElement(selector.slice(1))]));
   const urls: string[] = [];
   const signals: Array<AbortSignal | undefined> = [];
   let now = 1_700_000_000_000;
+  const fakeLocation = { pathname: "/", search: "", hash: "" };
+  const fakeHistory = { replaceState(_state: unknown, _title: string, url: string) { const parsed = new URL(url, "https://directory.test"); fakeLocation.pathname = parsed.pathname; fakeLocation.search = parsed.search; fakeLocation.hash = parsed.hash; } };
   const observers: Array<{ trigger(isIntersecting?: boolean): void; rootMargin?: string }> = [];
   class FakeIntersectionObserver {
     private readonly callback: (entries: Array<{ isIntersecting: boolean }>) => void;
@@ -106,6 +112,8 @@ function harness(responder?: Responder, withObserver = true) {
   };
   const fakeWindow = {
     innerHeight: 800,
+    location: fakeLocation,
+    history: fakeHistory,
     setTimeout: (handler: () => void, milliseconds: number) => setTimeout(handler, milliseconds),
     clearTimeout: (handle: unknown) => clearTimeout(handle as Parameters<typeof clearTimeout>[0]),
     ...(withObserver ? { IntersectionObserver: FakeIntersectionObserver } : {})
@@ -114,7 +122,7 @@ function harness(responder?: Responder, withObserver = true) {
     window: fakeWindow,
     document: {
       querySelector: (selector: string) => elements[selector] ?? fakeElement(),
-      querySelectorAll: () => []
+      querySelectorAll: (selector: string) => selector === "#academic-year, #grade, #room, #status, #department" ? [elements["#academic-year"], elements["#grade"], elements["#room"], elements["#status"], elements["#department"]] : []
     },
     fetch: fetcher,
     URLSearchParams,
@@ -131,6 +139,8 @@ function harness(responder?: Responder, withObserver = true) {
     advance(milliseconds: number) { now += milliseconds; },
     async flush() { await new Promise<void>((done) => setImmediate(done)); },
     async submit() { elements["#search-form"]?.dispatch("submit"); await this.flush(); },
+    async selectDepartment(value: string) { elements["#department"]!.value = value; elements["#department"]?.dispatch("change"); await this.flush(); },
+    departmentUrl() { return new URLSearchParams(fakeLocation.search).get("department"); },
     param(call: number, name: string) { return new URL(urls[call - 1] ?? "", "https://directory.test").searchParams.get(name); }
   };
 }
@@ -168,6 +178,24 @@ describe("public directory response cache and progressive loading", () => {
     // Repeating the complete combination now hits its own existing entry.
     await pageUnderTest.submit();
     expect(pageUnderTest.urls).toHaveLength(6);
+  });
+
+  it("sends the chosen subject filter on search and every cursor page", async () => {
+    const pageUnderTest = harness(async (url) => response(page("approved-fixture-v1", url.searchParams.has("cursor") ? undefined : "approved-fixture-cursor-2")));
+    await pageUnderTest.flush();
+    pageUnderTest.elements["#grade"]!.value = "ม.2";
+    pageUnderTest.elements["#status"]!.value = "ปกติ";
+    await pageUnderTest.selectDepartment("คณิตศาสตร์");
+    expect(pageUnderTest.param(2, "department")).toBe("คณิตศาสตร์");
+    expect(pageUnderTest.param(2, "grade")).toBeNull();
+    expect(pageUnderTest.param(2, "status")).toBeNull();
+    expect(pageUnderTest.elements["#grade"]?.value).toBe("");
+    expect(pageUnderTest.elements["#status"]?.value).toBe("");
+    expect(pageUnderTest.departmentUrl()).toBe("คณิตศาสตร์");
+    pageUnderTest.elements["#load-more"]?.dispatch("click");
+    await pageUnderTest.flush();
+    expect(pageUnderTest.param(3, "department")).toBe("คณิตศาสตร์");
+    expect(pageUnderTest.param(3, "cursor")).toBe("approved-fixture-cursor-2");
   });
 
   it("expires cached pages after the short TTL", async () => {

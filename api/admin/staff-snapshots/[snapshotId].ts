@@ -18,7 +18,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (!snapshot) { problem(response, 404, "NOT_FOUND", "Staff snapshot was not found"); return; }
   const [{ data: issues, error: issueError }, { data: records, error: recordError }] = await Promise.all([
     client.schema("directory").from("staff_snapshot_issues").select("id,severity,code,ordinal,safe_message,created_at").eq("snapshot_id", snapshotId).order("created_at", { ascending: true }).limit(500),
-    client.schema("directory").from("staff_snapshot_records").select("ordinal,public_id,display_name,search_name,category,title,source_row").eq("snapshot_id", snapshotId).order("ordinal", { ascending: true }).limit(500)
+    client.schema("directory").from("staff_snapshot_records").select("ordinal,public_id,display_name,search_name,category,department,title,source_row").eq("snapshot_id", snapshotId).order("ordinal", { ascending: true }).limit(500)
   ]);
   if (issueError || recordError) { problem(response, 500, "INTERNAL_ERROR"); return; }
 
@@ -42,7 +42,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       createdAt: snapshot.created_at,
       updatedAt: snapshot.updated_at,
       publishable: snapshot.status === "approved",
-      publicFields: snapshot.status === "approved" ? ["displayName", "category", "title"] : []
+      publicFields: snapshot.status === "approved" ? ["displayName", "category", "title", "department"] : []
     },
     issues: issues ?? [],
     records: records ?? []

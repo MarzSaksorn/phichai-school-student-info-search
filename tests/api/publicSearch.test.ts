@@ -9,6 +9,11 @@ const state = vi.hoisted(() => ({
     { public_id: "student-test-26999", display_name: "ตัวอย่าง สองหกเก้าเก้าเก้า", student_identifier: "26999", academic_year: "2569", grade: "ม.1", room: "1", status: null },
     { public_id: "student-test-26801", display_name: "ตัวอย่าง สองหกแปด", student_identifier: "26801", academic_year: "2569", grade: "ม.1", room: "1", status: null }
   ],
+  staffPublication: null as { id: string; published_at: string } | null,
+  staffRows: [
+    { public_id: "staff-test-1", display_name: "ครู ตัวอย่าง", search_name: "ครู ตัวอย่าง", category: "ครู", department: "คณิตศาสตร์", title: null },
+    { public_id: "staff-test-2", display_name: "ครู ตัวอย่างสอง", search_name: "ครู ตัวอย่างสอง", category: "ครู", department: "วิทยาศาสตร์", title: null }
+  ],
   eqCalls: [] as Array<[string, string, unknown]>,
   ilikeCalls: [] as Array<[string, string, unknown]>
 }));
@@ -33,8 +38,9 @@ vi.mock("../../api/_lib/supabase.js", () => ({
           filters.set(`${String(column)}__ilike`, value);
           return builder;
         };
-        builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : table === "staff_publication_versions" ? null : state.policy, error: null });
+        builder.maybeSingle = async () => ({ data: table === "dataset_versions" ? state.active : table === "staff_publication_versions" ? state.staffPublication : state.policy, error: null });
         builder.range = async () => {
+          if (table === "published_staff_records") return { data: state.staffRows, error: null, count: state.staffRows.length };
           const numberPrefix = filters.get("student_identifier__ilike");
           const rows = numberPrefix
             ? state.rows.filter((row) => row.student_identifier.startsWith(String(numberPrefix).replace(/%$/u, "")))
@@ -53,6 +59,11 @@ describe("public student number search API", () => {
   beforeEach(() => {
     state.eqCalls = [];
     state.ilikeCalls = [];
+    state.staffPublication = null;
+    state.staffRows = [
+      { public_id: "staff-test-1", display_name: "ครู ตัวอย่าง", search_name: "ครู ตัวอย่าง", category: "ครู", department: "คณิตศาสตร์", title: null },
+      { public_id: "staff-test-2", display_name: "ครู ตัวอย่างสอง", search_name: "ครู ตัวอย่างสอง", category: "ครู", department: "วิทยาศาสตร์", title: null }
+    ];
     state.policy = { student_public_fields: ["displayName", "studentNumber"], student_identifier_search: "exact_only", student_identifier_display: "public" };
   });
 
@@ -70,5 +81,23 @@ describe("public student number search API", () => {
     expect(result.items[0]).not.toHaveProperty("studentNumber");
     expect(state.eqCalls).not.toContainEqual(["published_student_records", "student_identifier", "00042"]);
     expect(state.ilikeCalls).toContainEqual(["published_student_records", "search_name", "%00042%"]);
+  });
+
+  it("returns and searches staff by the approved teaching department", async () => {
+    state.staffPublication = { id: "staff-publication-1", published_at: "2026-11-15T00:00:00.000Z" };
+    const result = await searchPublishedStudents({ q: "คณิตศาสตร์", pageSize: 20 });
+    const staff = result.items.find((item) => item.recordType === "staff");
+
+    expect(staff).toMatchObject({ recordType: "staff", department: "คณิตศาสตร์" });
+    expect(state.eqCalls).toContainEqual(["published_staff_records", "publication_version_id", "staff-publication-1"]);
+  });
+
+  it("filters exactly by department, excludes students, and returns every active department option", async () => {
+    state.staffPublication = { id: "staff-publication-1", published_at: "2026-11-15T00:00:00.000Z" };
+    const result = await searchPublishedStudents({ q: "", department: "คณิตศาสตร์", pageSize: 20 });
+
+    expect(result.items).toEqual([expect.objectContaining({ publicId: "staff-test-1", recordType: "staff", department: "คณิตศาสตร์" })]);
+    expect(result.items.every((item) => item.recordType === "staff")).toBe(true);
+    expect(result.departments).toEqual(["คณิตศาสตร์", "วิทยาศาสตร์"]);
   });
 });

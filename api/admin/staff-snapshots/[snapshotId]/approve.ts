@@ -43,7 +43,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         acceptedCount: publication.record_count,
         publishedAt: publication.published_at,
         publishable: true,
-        publicFields: ["displayName", "category", "title"]
+        publicFields: ["displayName", "category", "title", "department"]
       },
       note: "The reviewed staff snapshot is now visible in the public directory."
     });

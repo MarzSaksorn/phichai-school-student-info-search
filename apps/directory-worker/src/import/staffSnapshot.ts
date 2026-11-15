@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 export const STAFF_SNAPSHOT_SOURCE_TYPE = "staff_web_snapshot_review" as const;
 export const STAFF_SNAPSHOT_URL = "https://main.phichai.ac.th/school-staff";
-export const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v1";
+export const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v2";
 const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 
 export type StaffSnapshotContext = {
@@ -17,6 +17,7 @@ export type StaffSnapshotRow = {
   displayName: string | null;
   category: string | null;
   title?: string | null;
+  department?: string | null;
 };
 
 export type NormalizedStaff = {
@@ -25,6 +26,7 @@ export type NormalizedStaff = {
   displayName: string;
   searchName: string;
   category: string;
+  department?: string;
   title?: string;
   sourceFileId: string;
   sourceFileName: string;
@@ -82,6 +84,7 @@ export function normalizeStaffRow(
 ): NormalizedStaff {
   const displayName = normalizeStaffText(input.displayName);
   const category = normalizeStaffText(input.category);
+  const department = normalizeStaffText(input.department);
   const title = normalizeStaffText(input.title);
   if (!displayName) throw new StaffSnapshotError("Staff display name is required");
   if (!category) throw new StaffSnapshotError("Staff category is required");
@@ -96,6 +99,7 @@ export function normalizeStaffRow(
     displayName,
     searchName: displayName.toLocaleLowerCase("th-TH"),
     category,
+    ...(department ? { department } : {}),
     ...(title ? { title } : {}),
     sourceFileId: context.snapshotId,
     sourceFileName: fileName,
@@ -113,23 +117,23 @@ export function parseStaffSnapshot(html: string, context: StaffSnapshotContext):
   }
 
   const root = parseHtml(html);
-  const cards = findNodes(root, (node) => {
-    if (node.tag !== "div" || !hasClass(node, "cursor-pointer")) return false;
-    return Boolean(findFirst(node, (child) => child.tag === "h4" && hasClass(child, "text-xs") && hasClass(child, "font-bold")));
-  });
+  const paneDepartments = getPaneDepartments(root);
+  const cards = findStaffCards(root, paneDepartments);
   const issues: StaffSnapshotIssue[] = [];
   const records: NormalizedStaff[] = [];
   const names = new Set<string>();
 
-  cards.forEach((card, index) => {
+  cards.forEach(({ node: card, paneDepartment }, index) => {
     const ordinal = index + 1;
     const nameNode = findFirst(card, (node) => node.tag === "h4" && hasClass(node, "text-xs") && hasClass(node, "font-bold"));
     const categoryNode = findFirst(card, (node) => node.tag === "p" && hasClass(node, "text-indigo-600"));
     const titleNode = findFirst(card, (node) => node.tag === "p" && hasClass(node, "text-slate-400"));
+    const cardDepartment = teacherMajor(card.attributes.onclick);
     const row = {
       displayName: nameNode ? textContent(nameNode) : null,
       category: categoryNode ? textContent(categoryNode) : null,
-      title: titleNode ? textContent(titleNode) : null
+      title: titleNode ? textContent(titleNode) : null,
+      department: cardDepartment || paneDepartment || null
     };
 
     try {
@@ -168,6 +172,70 @@ export function parseStaffSnapshot(html: string, context: StaffSnapshotContext):
     readyForReview: records.length > 0 && !issues.some((issue) => issue.severity === "error"),
     publishable: false
   };
+}
+
+type StaffCard = { node: HtmlNode; paneDepartment?: string };
+
+function getPaneDepartments(root: HtmlNode): Map<string, string> {
+  const labels = new Map<string, string>();
+  for (const button of findNodes(root, (node) => node.tag === "button" && /^tab-btn-/u.test(node.attributes.id ?? ""))) {
+    const tabKey = /^tab-btn-(.+)$/u.exec(button.attributes.id ?? "")?.[1];
+    if (!tabKey) continue;
+    const label = textContent(button).replace(/\s+\d+\s*$/u, "").trim();
+    if (label) labels.set(`staff-content-${tabKey}`, label);
+  }
+  return labels;
+}
+
+function findStaffCards(root: HtmlNode, paneDepartments: Map<string, string>): StaffCard[] {
+  const cards: StaffCard[] = [];
+  const visit = (node: HtmlNode, currentDepartment?: string): void => {
+    const department = paneDepartments.get(node.attributes.id ?? "") ?? currentDepartment;
+    const isCard = node.tag === "div" && hasClass(node, "cursor-pointer") && Boolean(
+      findFirst(node, (child) => child.tag === "h4" && hasClass(child, "text-xs") && hasClass(child, "font-bold"))
+    );
+    if (isCard) {
+      cards.push({ node, ...(department ? { paneDepartment: department } : {}) });
+      return;
+    }
+    for (const child of node.children) if (typeof child !== "string") visit(child, department);
+  };
+  visit(root);
+  return cards;
+}
+
+function teacherMajor(onclick: string | undefined): string | undefined {
+  if (!onclick) return undefined;
+  const callStart = onclick.indexOf("openStaffDetails(");
+  const objectStart = callStart < 0 ? -1 : onclick.indexOf("{", callStart);
+  if (objectStart < 0) return undefined;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = objectStart; index < onclick.length; index += 1) {
+    const character = onclick[index];
+    if (character === undefined) return undefined;
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+    if (character === '"') inString = true;
+    else if (character === "{") depth += 1;
+    else if (character === "}" && --depth === 0) {
+      try {
+        const value: unknown = JSON.parse(onclick.slice(objectStart, index + 1));
+        if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
+        const major: unknown = Reflect.get(value, "Teach_major");
+        return typeof major === "string" ? normalizeStaffText(major) || undefined : undefined;
+      } catch {
+        return undefined;
+      }
+    }
+  }
+  return undefined;
 }
 
 function validateContext(context: StaffSnapshotContext): void {

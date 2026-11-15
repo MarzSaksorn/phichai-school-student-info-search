@@ -20,6 +20,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const grade = params.get("grade") || undefined;
     const room = params.get("room") || undefined;
     const status = params.get("status") || undefined;
+    const department = params.get("department") || undefined;
+    if (department && department.length > 120) { problem(response, 400, "BAD_REQUEST", "department must be at most 120 characters"); return; }
     const pageSizeRaw = Number(params.get("pageSize") ?? "20");
     if (!Number.isInteger(pageSizeRaw) || pageSizeRaw < 1 || pageSizeRaw > 50) { await recordTelemetry({ eventName: "request_failed", severity: "warning", route: "/api/search", requestId, statusCode: 400, durationMs: Date.now() - startedAt, errorCode: "PAGE_SIZE_INVALID" }); problem(response, 400, "BAD_REQUEST", "pageSize must be between 1 and 50"); return; }
     // An empty query is a browse request: the directory lists every published
@@ -28,7 +30,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const decision = allowSearch(key);
     if (!decision.allowed) { await recordTelemetry({ eventName: "rate_limited", severity: "warning", route: "/api/search", requestId, statusCode: 429, durationMs: Date.now() - startedAt }); json(response, 429, { error: "RATE_LIMITED" }, { "retry-after": String(decision.retryAfter) }); return; }
     const cursor = params.get("cursor");
-    const result = await searchPublishedStudents({ q, ...(academicYear ? { academicYear } : {}), ...(grade ? { grade } : {}), ...(room ? { room } : {}), ...(status ? { status } : {}), ...(cursor ? { cursor } : {}), pageSize: pageSizeRaw });
+    const result = await searchPublishedStudents({ q, ...(academicYear ? { academicYear } : {}), ...(grade ? { grade } : {}), ...(room ? { room } : {}), ...(status ? { status } : {}), ...(department ? { department } : {}), ...(cursor ? { cursor } : {}), pageSize: pageSizeRaw });
     await supabaseAdmin().schema("directory").from("audit_events").insert({ event: "search_succeeded", actor_id: `public:${createHash("sha256").update(key).digest("hex").slice(0, 24)}`, outcome: "success", request_id: requestId, safe_metadata: { queryLength: q.length, resultCount: result.items.length } });
     await recordTelemetry({ eventName: "request_completed", severity: "info", route: "/api/search", requestId, statusCode: 200, durationMs: Date.now() - startedAt, safeMetadata: { resultCount: result.items.length } });
     json(response, 200, result);

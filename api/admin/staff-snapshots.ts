@@ -9,7 +9,7 @@ const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 const HTML_MIME = "text/html";
 const STAFF_SNAPSHOT_BUCKET = "directory-staff-raw";
 const STAFF_SNAPSHOT_SOURCE_TYPE = "staff_web_snapshot_review";
-const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v1";
+const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v2";
 const STAFF_SNAPSHOT_URL = "https://main.phichai.ac.th/school-staff";
 
 type SnapshotUpload = {
@@ -126,6 +126,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         display_name: record.displayName,
         search_name: record.searchName,
         category: record.category,
+        ...(record.department ? { department: record.department } : {}),
         ...(record.title ? { title: record.title } : {}),
         source_row: record.sourceRow
       })));

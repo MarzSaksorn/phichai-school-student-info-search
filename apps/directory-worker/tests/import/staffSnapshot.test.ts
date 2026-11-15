@@ -46,6 +46,22 @@ describe("staff HTML snapshot review parser", () => {
     expect(review.records[0]).not.toHaveProperty("rawHtml");
   });
 
+  it("extracts the teaching department from the card payload and ignores unrelated personal fields", () => {
+    const html = `<div class="cursor-pointer" onclick="openStaffDetails({&quot;Teach_id&quot;:&quot;private-id&quot;,&quot;Teach_major&quot;:&quot;คณิตศาสตร์&quot;,&quot;Teach_phone&quot;:&quot;private-phone&quot;}, 'female', 'ท')">${card("ครู ตัวอย่าง", "ครู")}</div>`;
+    const review = parseStaffSnapshot(html, context);
+
+    expect(review.records[0]?.department).toBe("คณิตศาสตร์");
+    expect(review.records[0]).not.toHaveProperty("Teach_id");
+    expect(review.records[0]).not.toHaveProperty("Teach_phone");
+  });
+
+  it("uses the enclosing department tab when Teach_major is empty", () => {
+    const html = `<button id="tab-btn-science" class="staff-tab-btn">วิทยาศาสตร์และเทคโนโลยี <span>27</span></button><div id="staff-content-science" class="staff-content-pane"><div class="cursor-pointer" onclick="openStaffDetails({&quot;Teach_major&quot;:&quot;&quot;}, 'female', 'ท')">${card("ครู ตัวอย่าง", "ครู")}</div></div>`;
+    const review = parseStaffSnapshot(html, context);
+
+    expect(review.records[0]?.department).toBe("วิทยาศาสตร์และเทคโนโลยี");
+  });
+
   it("reports duplicate names as a warning while preserving separate source rows", () => {
     const review = parseStaffSnapshot(`${card("ครูซ้ำ ชื่อเดิม", "ครู")}${card("ครูซ้ำ ชื่อเดิม", "ครู")}`, context);
 

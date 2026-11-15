@@ -19,12 +19,13 @@ type PublicStaffItem = {
   recordType: "staff";
   displayName: string;
   category: string;
+  department?: string;
   title?: string;
   publishedAt: string;
 };
 
-export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; cursor?: string; pageSize: number };
-export type PublicSearchOutput = { items: Array<PublicStudentItem | PublicStaffItem>; total: number; nextCursor?: string; datasetVersion: string; publishedAt: string };
+export type PublicSearchInput = { q: string; academicYear?: string; grade?: string; room?: string; status?: string; department?: string; cursor?: string; pageSize: number };
+export type PublicSearchOutput = { items: Array<PublicStudentItem | PublicStaffItem>; total: number; nextCursor?: string; datasetVersion: string; publishedAt: string; departments: string[] };
 
 const SUMMARY_NOTE_PATTERN = /ณ\s*วันที่|จำนวนนักเรียน|นักเรียนทั้งหมด|รวมทั้งสิ้น/u;
 
@@ -49,6 +50,7 @@ type StaffRow = {
   display_name: string;
   search_name: string;
   category: string;
+  department: string | null;
   title: string | null;
 };
 
@@ -83,11 +85,12 @@ const compareRosterRows = (a: RosterRow, b: RosterRow): number => {
 function staffMatches(row: StaffRow, q: string): boolean {
   if (!q) return true;
   const needle = q.toLocaleLowerCase("th-TH");
-  return [row.search_name, row.category, row.title ?? ""].some((value) => String(value ?? "").toLocaleLowerCase("th-TH").includes(needle));
+  return [row.search_name, row.category, row.department ?? "", row.title ?? ""].some((value) => String(value ?? "").toLocaleLowerCase("th-TH").includes(needle));
 }
 
 export async function searchPublishedStudents(input: PublicSearchInput): Promise<PublicSearchOutput> {
   const q = clean(input.q).toLocaleLowerCase("th-TH");
+  const department = input.department ? clean(input.department) : "";
   const offset = cursorValue(input.cursor);
   const client = supabaseAdmin();
   const { data: active, error: activeError } = await client.schema("directory").from("dataset_versions").select("id,version,published_at,created_at,field_config_version").eq("status", "active").maybeSingle();
@@ -117,25 +120,28 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
   if (input.status) studentQuery = studentQuery.eq("status", clean(input.status));
 
   const students: RosterRow[] = [];
-  for (let fetchOffset = 0; ; fetchOffset += ROSTER_FETCH_PAGE) {
-    const { data, error } = await studentQuery.range(fetchOffset, fetchOffset + ROSTER_FETCH_PAGE - 1);
-    if (error) throw new Error("SEARCH_UNAVAILABLE");
-    const page = (data ?? []) as RosterRow[];
-    students.push(...page);
-    if (page.length < ROSTER_FETCH_PAGE) break;
-  }
-  const staff: StaffRow[] = [];
-  if (!input.academicYear && !input.grade && !input.room && !input.status) {
-    const { data: staffPublication, error: staffPublicationError } = await client.schema("directory").from("staff_publication_versions")
-      .select("id,published_at").eq("status", "active").maybeSingle();
-    if (staffPublicationError) throw new Error("SEARCH_UNAVAILABLE");
-    if (staffPublication) {
-      const { data, error } = await client.schema("directory").from("published_staff_records")
-        .select("public_id,display_name,search_name,category,title").eq("publication_version_id", staffPublication.id).order("public_id", { ascending: true }).range(0, 999);
+  if (!department) {
+    for (let fetchOffset = 0; ; fetchOffset += ROSTER_FETCH_PAGE) {
+      const { data, error } = await studentQuery.range(fetchOffset, fetchOffset + ROSTER_FETCH_PAGE - 1);
       if (error) throw new Error("SEARCH_UNAVAILABLE");
-      staff.push(...((data ?? []) as StaffRow[]).filter((row) => staffMatches(row, q)));
+      const page = (data ?? []) as RosterRow[];
+      students.push(...page);
+      if (page.length < ROSTER_FETCH_PAGE) break;
     }
   }
+  const { data: staffPublication, error: staffPublicationError } = await client.schema("directory").from("staff_publication_versions")
+    .select("id,published_at").eq("status", "active").maybeSingle();
+  if (staffPublicationError) throw new Error("SEARCH_UNAVAILABLE");
+  let allStaffRows: StaffRow[] = [];
+  if (staffPublication) {
+    const { data, error } = await client.schema("directory").from("published_staff_records")
+      .select("public_id,display_name,search_name,category,department,title").eq("publication_version_id", staffPublication.id).order("public_id", { ascending: true }).range(0, 999);
+    if (error) throw new Error("SEARCH_UNAVAILABLE");
+    allStaffRows = (data ?? []) as StaffRow[];
+  }
+  const departments = [...new Set(allStaffRows.map((row) => clean(row.department ?? "")).filter(Boolean))].sort((a, b) => a.localeCompare(b, "th-TH"));
+  const shouldIncludeStaff = Boolean(department) || (!input.academicYear && !input.grade && !input.room && !input.status);
+  const staff = shouldIncludeStaff ? allStaffRows.filter((row) => staffMatches(row, q) && (!department || clean(row.department ?? "") === department)) : [];
 
   const publishedAt = active.published_at ?? active.created_at;
   const studentItems: PublicStudentItem[] = students
@@ -144,10 +150,10 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
     .map((row) => ({ publicId: row.public_id, recordType: "student", displayName: row.display_name, ...(showStudentNumber && row.student_identifier ? { studentNumber: String(row.student_identifier) } : {}), academicYear: row.academic_year, grade: row.grade, room: row.room, ...(row.status ? { status: row.status } : {}), publishedAt }));
   const staffItems: PublicStaffItem[] = staff
     .sort((a, b) => a.display_name.localeCompare(b.display_name, "th-TH") || a.public_id.localeCompare(b.public_id))
-    .map((row) => ({ publicId: row.public_id, recordType: "staff", displayName: row.display_name, category: row.category, ...(row.title ? { title: row.title } : {}), publishedAt }));
+    .map((row) => ({ publicId: row.public_id, recordType: "staff", displayName: row.display_name, category: row.category, ...(row.department ? { department: row.department } : {}), ...(row.title ? { title: row.title } : {}), publishedAt }));
   const allItems: Array<PublicStudentItem | PublicStaffItem> = [...staffItems, ...studentItems];
   const items = allItems.slice(offset, offset + input.pageSize);
-  const result: PublicSearchOutput = { items, total: allItems.length, datasetVersion: `${active.version}${staffItems.length ? "+staff" : ""}`, publishedAt };
+  const result: PublicSearchOutput = { items, total: allItems.length, datasetVersion: `${active.version}${staffItems.length ? "+staff" : ""}`, publishedAt, departments };
   if (offset + items.length < allItems.length) result.nextCursor = cursorFor(offset + items.length);
   return result;
 }

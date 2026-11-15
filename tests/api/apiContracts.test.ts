@@ -28,6 +28,19 @@ describe("Vercel API contracts", () => {
     expect(read("apps/directory-worker/src/db/migrations/007_public_student_number_policy.sql")).toContain("student_identifier_display in ('disabled', 'masked', 'authenticated_only', 'public')");
   });
 
+  it("supports the public teaching-department filter and publishes only active facet labels", () => {
+    const route = read("api/search.ts");
+    const search = read("api/_lib/publicSearch.ts");
+    const openapi = read("docs/api/openapi.yaml");
+    expect(route).toContain('params.get("department")');
+    expect(route).toContain("department.length > 120");
+    expect(search).toContain("department?: string");
+    expect(search).toContain("departments: string[]");
+    expect(search).toContain("clean(row.department ?? \"\") === department");
+    expect(openapi).toContain("Exact staff department/subject match");
+    expect(openapi).toContain("Distinct departments available in the active public staff publication");
+  });
+
   it("requires all six grade workbooks and student numbers before the school-wide import can publish", () => {
     const imports = read("api/admin/imports.ts");
     const schema = read("api/_lib/studentSchema.ts");
@@ -90,5 +103,12 @@ describe("Vercel API contracts", () => {
     expect(publication).toContain("publish_staff_snapshot");
     expect(publication).toContain("publication.snapshot_id = p_snapshot_id");
     expect(publication).toContain("source_record.snapshot_id = p_snapshot_id");
+    const departmentMigration = read("apps/directory-worker/src/db/migrations/013_staff_department.sql");
+    expect(departmentMigration).toContain("add column if not exists department text");
+    expect(departmentMigration).toContain("source_record.department");
+    expect(departmentMigration).toContain("publicFields', jsonb_build_array('displayName', 'category', 'title', 'department')");
+    expect(approval).toContain('"department"');
+    expect(status).toContain("category,department,title");
+    expect(read("api/_lib/publicSearch.ts")).toContain("category,department,title");
   });
 });
