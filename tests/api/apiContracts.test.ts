@@ -66,7 +66,8 @@ describe("Vercel API contracts", () => {
     expect(upload).toContain('await import("../../apps/directory-worker/src/import/staffSnapshot.js")');
     expect(upload).not.toContain('import { STAFF_SNAPSHOT_SCHEMA_VERSION, STAFF_SNAPSHOT_SOURCE_TYPE, STAFF_SNAPSHOT_URL, parseStaffSnapshot }');
     expect(upload).toContain("publishable: false");
-    expect(upload).toContain('from("directory-raw")');
+    expect(upload).toContain('STAFF_SNAPSHOT_BUCKET = "directory-staff-raw"');
+    expect(upload).toContain('from(STAFF_SNAPSHOT_BUCKET)');
     expect(approval).toContain("STAFF_SNAPSHOT_APPROVAL_ENABLED");
     expect(approval).toContain("publishable: false");
     expect(status).toContain("staff_snapshot_records");
