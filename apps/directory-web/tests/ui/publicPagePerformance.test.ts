@@ -375,6 +375,20 @@ describe("public directory response cache and progressive loading", () => {
     expect(rendered).toContain(">std00042@phichai.ac.th</a>");
   });
 
+  it("keeps the student-number and academic-year tags in the same row", async () => {
+    const pageUnderTest = harness(async () => response({
+      items: [{ publicId: "student-synthetic", recordType: "student", displayName: "Synthetic Student", studentNumber: "00042", grade: "ม.1", room: "1", academicYear: "2569" }],
+      total: 1,
+      datasetVersion: "approved-fixture-v1",
+      publishedAt: "2026-01-01T00:00:00.000Z",
+      departments: []
+    }));
+    await pageUnderTest.flush();
+
+    const rendered = pageUnderTest.elements["#result-region"]?.innerHTML ?? "";
+    expect(rendered).toContain('<div class="student-identity-tags"><span>เลขประจำตัว 00042</span><span>ปี 2569</span></div>');
+  });
+
   it("does not derive a student email from an identifier that is not exactly five digits", async () => {
     const pageUnderTest = harness(async () => response({
       items: [{ publicId: "student-synthetic", recordType: "student", displayName: "Synthetic Student", studentNumber: "1234", grade: "ม.1", room: "1", academicYear: "2569" }],

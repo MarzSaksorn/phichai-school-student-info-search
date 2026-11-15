@@ -81,6 +81,7 @@ describe("public directory UI v0", () => {
     expect(source).toContain("escapeHtml(item.displayName)");
     expect(source).toContain("item.studentNumber");
     expect(source).toContain("escapeHtml(item.studentNumber)");
+    expect(source).toContain("student-identity-tags");
     expect(source).toContain("studentEmail");
     expect(source).toContain("@phichai.ac.th");
     expect(source).toContain("safeMailtoHref(emailAddress)");

@@ -167,6 +167,7 @@
     .result-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; color: var(--muted); font-size: 13px; }
     .result-meta span { padding: 3px 10px; border-radius: 999px; background: var(--surface); }
     .result-meta span:first-child { background: var(--pink-soft); color: var(--pink); font-weight: 700; }
+    .result-meta .student-identity-tags { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 8px; white-space: nowrap; }
     .result-meta .email-meta { overflow-wrap: anywhere; }
     .result-meta a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 2px; }
     .result-meta a:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; border-radius: 2px; }
@@ -328,7 +329,16 @@
       const safeMailtoHref = (value) => { const email = String(value ?? '').trim(); if (!/^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)+$/iu.test(email)) return ''; const at = email.lastIndexOf('@'); return 'mailto:' + encodeURIComponent(email.slice(0, at)) + '@' + email.slice(at + 1); };
       const updateDepartmentUrl = (department) => { if (!window.location || !window.history) return; const params = new URLSearchParams(window.location.search); if (department) params.set('department', department); else params.delete('department'); const query = params.toString(); window.history.replaceState({}, '', window.location.pathname + (query ? '?' + query : '') + (window.location.hash || '')); };
       const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; nextCursor = ''; loadMore.hidden = true; resultRegion.removeAttribute('aria-busy'); };
-      const card = (item, index) => { const isStaff = item.recordType === 'staff'; const studentEmail = !isStaff && typeof item.studentNumber === 'string' && /^\d{5}$/u.test(item.studentNumber) ? 'std' + item.studentNumber + '@phichai.ac.th' : ''; const emailAddress = isStaff ? item.email : studentEmail; const emailHref = safeMailtoHref(emailAddress); const emailMeta = emailHref ? '<span class="email-meta">อีเมล: <a href="' + escapeHtml(emailHref) + '">' + escapeHtml(emailAddress) + '</a></span>' : ''; const meta = isStaff ? '<span>' + escapeHtml(item.category) + '</span>' + (item.department ? '<span>วิชา/ฝ่าย: ' + escapeHtml(item.department) + '</span>' : '') + (item.title ? '<span>' + escapeHtml(item.title) + '</span>' : '') + emailMeta : (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + emailMeta + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span>'; return '<article class="result-card daisy-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (isStaff ? '<span class="result-status daisy-badge">บุคลากร</span>' : (item.status ? '<span class="result-status daisy-badge">' + escapeHtml(item.status) + '</span>' : '')) + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + meta + '</div></article>'; };
+      const card = (item, index) => {
+        const isStaff = item.recordType === 'staff';
+        const studentEmail = !isStaff && typeof item.studentNumber === 'string' && /^\d{5}$/u.test(item.studentNumber) ? 'std' + item.studentNumber + '@phichai.ac.th' : '';
+        const emailAddress = isStaff ? item.email : studentEmail;
+        const emailHref = safeMailtoHref(emailAddress);
+        const emailMeta = emailHref ? '<span class="email-meta">อีเมล: <a href="' + escapeHtml(emailHref) + '">' + escapeHtml(emailAddress) + '</a></span>' : '';
+        const studentIdentityMeta = '<div class="student-identity-tags">' + (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>ปี ' + escapeHtml(item.academicYear) + '</span></div>';
+        const meta = isStaff ? '<span>' + escapeHtml(item.category) + '</span>' + (item.department ? '<span>วิชา/ฝ่าย: ' + escapeHtml(item.department) + '</span>' : '') + (item.title ? '<span>' + escapeHtml(item.title) + '</span>' : '') + emailMeta : studentIdentityMeta + emailMeta + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span>';
+        return '<article class="result-card daisy-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (isStaff ? '<span class="result-status daisy-badge">บุคลากร</span>' : (item.status ? '<span class="result-status daisy-badge">' + escapeHtml(item.status) + '</span>' : '')) + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + meta + '</div></article>';
+      };
       const animateCards = (grid) => {
         if (!canAnimateCards || !grid) return;
         const cards = grid.querySelectorAll('.result-card');
