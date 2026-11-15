@@ -65,8 +65,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain("ease: 'power2.out'");
     expect(source).toContain('name="q"');
     expect(source).toContain('name="academicYear"');
-    expect(source).toContain('name="status"');
-    expect(source.match(/id="status"/gu)).toHaveLength(1);
+    expect(source).not.toContain('name="status"');
+    expect(source).not.toContain('id="status-options"');
+    expect(source).toContain("item.status");
     expect(source).toContain('name="recordType"');
     expect(source).toContain('data-select-for="record-type" data-value="student"');
     expect(source).toContain('data-select-for="record-type" data-value="staff"');

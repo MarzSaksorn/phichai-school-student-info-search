@@ -83,7 +83,7 @@ function page(datasetVersion = "approved-fixture-v1", cursor?: string): SearchBo
 }
 
 function harness(responder?: Responder, withObserver = true) {
-  const selectors = ["#search-form", "#result-region", "#result-count", "#status-line", "#load-more", "#query", "#art-stats", "#academic-year", "#grade", "#room", "#status", "#department", "#department-options", "#record-type"];
+  const selectors = ["#search-form", "#result-region", "#result-count", "#status-line", "#load-more", "#query", "#art-stats", "#academic-year", "#grade", "#room", "#department", "#department-options", "#record-type"];
   const elements = Object.fromEntries(selectors.map((selector) => [selector, fakeElement(selector.slice(1))]));
   const urls: string[] = [];
   const signals: Array<AbortSignal | undefined> = [];
@@ -122,7 +122,7 @@ function harness(responder?: Responder, withObserver = true) {
     window: fakeWindow,
     document: {
       querySelector: (selector: string) => elements[selector] ?? fakeElement(),
-      querySelectorAll: (selector: string) => selector === "#academic-year, #grade, #room, #status, #department, #record-type" ? [elements["#academic-year"], elements["#grade"], elements["#room"], elements["#status"], elements["#department"], elements["#record-type"]] : []
+      querySelectorAll: (selector: string) => selector === "#academic-year, #grade, #room, #department, #record-type" ? [elements["#academic-year"], elements["#grade"], elements["#room"], elements["#department"], elements["#record-type"]] : []
     },
     fetch: fetcher,
     URLSearchParams,
@@ -168,32 +168,28 @@ describe("public directory response cache and progressive loading", () => {
     await pageUnderTest.submit();
     pageUnderTest.elements["#academic-year"]!.value = "2569";
     await pageUnderTest.submit();
-    pageUnderTest.elements["#status"]!.value = "ปกติ";
-    await pageUnderTest.submit();
     await pageUnderTest.selectRecordType("staff");
-    expect(pageUnderTest.urls).toHaveLength(7);
-    expect(pageUnderTest.param(7, "q")).toBe("Synthetic query");
-    expect(pageUnderTest.param(7, "recordType")).toBe("staff");
-    expect(pageUnderTest.param(7, "grade")).toBeNull();
-    expect(pageUnderTest.param(7, "room")).toBeNull();
-    expect(pageUnderTest.param(7, "academicYear")).toBeNull();
-    expect(pageUnderTest.param(7, "status")).toBeNull();
+    expect(pageUnderTest.urls).toHaveLength(6);
+    expect(pageUnderTest.param(6, "q")).toBe("Synthetic query");
+    expect(pageUnderTest.param(6, "recordType")).toBe("staff");
+    expect(pageUnderTest.param(6, "grade")).toBeNull();
+    expect(pageUnderTest.param(6, "room")).toBeNull();
+    expect(pageUnderTest.param(6, "academicYear")).toBeNull();
+    expect(pageUnderTest.param(6, "status")).toBeNull();
     // Repeating the complete combination now hits its own existing entry.
     await pageUnderTest.submit();
-    expect(pageUnderTest.urls).toHaveLength(7);
+    expect(pageUnderTest.urls).toHaveLength(6);
   });
 
   it("sends the chosen subject filter on search and every cursor page", async () => {
     const pageUnderTest = harness(async (url) => response(page("approved-fixture-v1", url.searchParams.has("cursor") ? undefined : "approved-fixture-cursor-2")));
     await pageUnderTest.flush();
     pageUnderTest.elements["#grade"]!.value = "ม.2";
-    pageUnderTest.elements["#status"]!.value = "ปกติ";
     await pageUnderTest.selectDepartment("คณิตศาสตร์");
     expect(pageUnderTest.param(2, "department")).toBe("คณิตศาสตร์");
     expect(pageUnderTest.param(2, "grade")).toBeNull();
     expect(pageUnderTest.param(2, "status")).toBeNull();
     expect(pageUnderTest.elements["#grade"]?.value).toBe("");
-    expect(pageUnderTest.elements["#status"]?.value).toBe("");
     expect(pageUnderTest.param(2, "recordType")).toBe("staff");
     expect(pageUnderTest.departmentUrl()).toBe("คณิตศาสตร์");
     pageUnderTest.elements["#load-more"]?.dispatch("click");
