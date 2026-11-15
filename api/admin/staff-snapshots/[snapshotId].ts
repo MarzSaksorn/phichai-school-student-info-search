@@ -2,6 +2,10 @@ import type { ApiRequest, ApiResponse } from "../../_lib/http.js";
 import { bearerToken, json, method, problem } from "../../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../../_lib/supabase.js";
 
+const STAFF_SNAPSHOT_EMAIL_SCHEMA_VERSION = "staff-web-card-v3";
+const STAFF_REVIEW_PAGE_SIZE = 500;
+const STAFF_REVIEW_MAX_OFFSET = 1_000_000;
+
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["GET"])) return;
   const actor = await authenticatedActor(bearerToken(request.headers));
@@ -9,6 +13,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   if (!["importer", "publisher", "operator", "owner"].includes(actor.role)) { problem(response, 403, "FORBIDDEN", "Administrator role is insufficient"); return; }
   const snapshotId = Array.isArray(request.query?.snapshotId) ? request.query.snapshotId[0] : request.query?.snapshotId;
   if (!snapshotId) { problem(response, 400, "BAD_REQUEST", "Staff snapshot id is required"); return; }
+  const rawOffset = Array.isArray(request.query?.offset) ? request.query.offset[0] : request.query?.offset;
+  if (rawOffset !== undefined && !/^(?:0|[1-9]\d*)$/u.test(rawOffset)) { problem(response, 400, "BAD_REQUEST", "Review offset must be a non-negative integer"); return; }
+  const offset = rawOffset === undefined ? 0 : Number(rawOffset);
+  if (!Number.isSafeInteger(offset) || offset > STAFF_REVIEW_MAX_OFFSET) { problem(response, 400, "BAD_REQUEST", "Review offset is out of range"); return; }
 
   const client = supabaseAdmin();
   const { data: snapshot, error: snapshotError } = await client.schema("directory").from("staff_snapshot_jobs")
@@ -16,9 +24,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     .eq("id", snapshotId).maybeSingle();
   if (snapshotError) { problem(response, 500, "INTERNAL_ERROR"); return; }
   if (!snapshot) { problem(response, 404, "NOT_FOUND", "Staff snapshot was not found"); return; }
-  const [{ data: issues, error: issueError }, { data: records, error: recordError }] = await Promise.all([
-    client.schema("directory").from("staff_snapshot_issues").select("id,severity,code,ordinal,safe_message,created_at").eq("snapshot_id", snapshotId).order("created_at", { ascending: true }).limit(500),
-    client.schema("directory").from("staff_snapshot_records").select("ordinal,public_id,display_name,search_name,category,department,title,source_row").eq("snapshot_id", snapshotId).order("ordinal", { ascending: true }).limit(500)
+  const [{ data: issues, error: issueError, count: issueCount }, { data: records, error: recordError, count: recordCount }] = await Promise.all([
+    client.schema("directory").from("staff_snapshot_issues").select("id,severity,code,ordinal,safe_message,created_at", { count: "exact" }).eq("snapshot_id", snapshotId).order("created_at", { ascending: true }).order("id", { ascending: true }).range(offset, offset + STAFF_REVIEW_PAGE_SIZE - 1),
+    client.schema("directory").from("staff_snapshot_records").select("ordinal,public_id,display_name,search_name,category,department,email,title,source_row", { count: "exact" }).eq("snapshot_id", snapshotId).order("ordinal", { ascending: true }).range(offset, offset + STAFF_REVIEW_PAGE_SIZE - 1)
   ]);
   if (issueError || recordError) { problem(response, 500, "INTERNAL_ERROR"); return; }
 
@@ -42,8 +50,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       createdAt: snapshot.created_at,
       updatedAt: snapshot.updated_at,
       publishable: snapshot.status === "approved",
-      publicFields: snapshot.status === "approved" ? ["displayName", "category", "title", "department"] : []
+      publicFields: snapshot.status === "approved" ? ["displayName", "category", "title", "department", ...(snapshot.schema_version === STAFF_SNAPSHOT_EMAIL_SCHEMA_VERSION ? ["email"] : [])] : []
     },
+    recordCount: recordCount ?? 0,
+    issueCount: issueCount ?? 0,
     issues: issues ?? [],
     records: records ?? []
   });

@@ -108,7 +108,25 @@ describe("Vercel API contracts", () => {
     expect(departmentMigration).toContain("source_record.department");
     expect(departmentMigration).toContain("publicFields', jsonb_build_array('displayName', 'category', 'title', 'department')");
     expect(approval).toContain('"department"');
-    expect(status).toContain("category,department,title");
-    expect(read("api/_lib/publicSearch.ts")).toContain("category,department,title");
+    expect(status).toContain("category,department,email,title");
+    const search = read("api/_lib/publicSearch.ts");
+    expect(search).toContain("category,department,title,email");
+    expect(search).toContain("row.email ?? \"\"");
+
+    const emailMigration = read("apps/directory-worker/src/db/migrations/014_staff_email.sql");
+    expect(emailMigration).toContain("add column if not exists email text");
+    expect(emailMigration).toContain("source_record.email");
+    expect(emailMigration).toContain("'department', 'email'");
+    expect(emailMigration).toContain("v_snapshot.schema_version = 'staff-web-card-v3'");
+    expect(upload).toContain("staff-web-card-v3");
+    expect(upload).toContain("record.email");
+    const approveEndpoint = read("api/admin/staff-snapshots/[snapshotId]/approve.ts");
+    expect(approveEndpoint).toContain("snapshotInfo.schema_version === STAFF_SNAPSHOT_EMAIL_SCHEMA_VERSION");
+    expect(approveEndpoint).toContain('publicFields.push("email")');
+    const snapshotReview = read("api/admin/staff-snapshots/[snapshotId].ts");
+    expect(snapshotReview).toContain("STAFF_REVIEW_MAX_OFFSET");
+    expect(snapshotReview).toContain("count: \"exact\"");
+    expect(snapshotReview).toContain("range(offset, offset + STAFF_REVIEW_PAGE_SIZE - 1)");
+    expect(read("docs/api/openapi.yaml")).toContain("Teach_email address");
   });
 });

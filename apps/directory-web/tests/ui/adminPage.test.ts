@@ -32,6 +32,14 @@ describe("protected admin directory UI", () => {
     expect(source).toContain("authPassword.defaultValue = ''");
     expect(source).toContain("/api/admin/staff-snapshots");
     expect(source).toContain("staff-review-link");
+    expect(source).toContain("staff-record-preview");
+    expect(source).toContain("staffReviewLoaded");
+    expect(source).toContain("loadStaffSnapshotReport");
+    expect(source).toContain("recordCount");
+    expect(source).toContain("issueCount");
+    expect(source).toContain("record.email");
+    expect(source).toContain("details.textContent = values.map");
+    expect(source).toContain("วิชา/ฝ่าย ตำแหน่ง และอีเมล");
   });
 
   it("keeps raw row values out of the admin UI and includes safe failure states", () => {

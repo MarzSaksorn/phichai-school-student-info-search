@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 export const STAFF_SNAPSHOT_SOURCE_TYPE = "staff_web_snapshot_review" as const;
 export const STAFF_SNAPSHOT_URL = "https://main.phichai.ac.th/school-staff";
-export const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v2";
+export const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v3";
 const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 
 export type StaffSnapshotContext = {
@@ -18,6 +18,7 @@ export type StaffSnapshotRow = {
   category: string | null;
   title?: string | null;
   department?: string | null;
+  email?: string | null;
 };
 
 export type NormalizedStaff = {
@@ -27,6 +28,7 @@ export type NormalizedStaff = {
   searchName: string;
   category: string;
   department?: string;
+  email?: string;
   title?: string;
   sourceFileId: string;
   sourceFileName: string;
@@ -38,7 +40,7 @@ export type NormalizedStaff = {
 };
 
 export type StaffSnapshotIssue = {
-  code: "STAFF_CARD_INVALID" | "STAFF_CARD_INCOMPLETE" | "STAFF_SNAPSHOT_EMPTY" | "STAFF_DUPLICATE_NAME";
+  code: "STAFF_CARD_INVALID" | "STAFF_CARD_INCOMPLETE" | "STAFF_EMAIL_INVALID" | "STAFF_SNAPSHOT_EMPTY" | "STAFF_DUPLICATE_NAME";
   severity: "error" | "warning";
   ordinal?: number;
   message: string;
@@ -85,9 +87,11 @@ export function normalizeStaffRow(
   const displayName = normalizeStaffText(input.displayName);
   const category = normalizeStaffText(input.category);
   const department = normalizeStaffText(input.department);
+  const email = normalizeStaffText(input.email);
   const title = normalizeStaffText(input.title);
   if (!displayName) throw new StaffSnapshotError("Staff display name is required");
   if (!category) throw new StaffSnapshotError("Staff category is required");
+  if (email && !isValidStaffEmail(email)) throw new StaffSnapshotError("Staff email address is invalid");
 
   const identitySeed = `${context.sourceUrl}:${displayName}:${category}:${ordinal}`;
   const publicId = `staff-${createHash("sha256").update(identitySeed).digest("hex").slice(0, 24)}`;
@@ -100,6 +104,7 @@ export function normalizeStaffRow(
     searchName: displayName.toLocaleLowerCase("th-TH"),
     category,
     ...(department ? { department } : {}),
+    ...(email ? { email } : {}),
     ...(title ? { title } : {}),
     sourceFileId: context.snapshotId,
     sourceFileName: fileName,
@@ -129,15 +134,21 @@ export function parseStaffSnapshot(html: string, context: StaffSnapshotContext):
     const categoryNode = findFirst(card, (node) => node.tag === "p" && hasClass(node, "text-indigo-600"));
     const titleNode = findFirst(card, (node) => node.tag === "p" && hasClass(node, "text-slate-400"));
     const cardDepartment = teacherMajor(card.attributes.onclick);
+    const cardEmail = teacherEmail(card.attributes.onclick);
+    const validEmail = cardEmail && isValidStaffEmail(cardEmail) ? cardEmail : undefined;
     const row = {
       displayName: nameNode ? textContent(nameNode) : null,
       category: categoryNode ? textContent(categoryNode) : null,
       title: titleNode ? textContent(titleNode) : null,
-      department: cardDepartment || paneDepartment || null
+      department: cardDepartment || paneDepartment || null,
+      email: validEmail ?? null
     };
 
     try {
       const record = normalizeStaffRow(row, context, ordinal);
+      if (cardEmail && !validEmail) {
+        issues.push({ code: "STAFF_EMAIL_INVALID", severity: "warning", ordinal, message: "Staff card has an invalid email address; email was excluded from publication" });
+      }
       if (names.has(record.displayName)) {
         issues.push({ code: "STAFF_DUPLICATE_NAME", severity: "warning", ordinal, message: "Duplicate staff display name requires operator review" });
       }
@@ -204,7 +215,9 @@ function findStaffCards(root: HtmlNode, paneDepartments: Map<string, string>): S
   return cards;
 }
 
-function teacherMajor(onclick: string | undefined): string | undefined {
+type StaffDetailsPayload = { Teach_major?: unknown; Teach_email?: unknown };
+
+function staffDetailsPayload(onclick: string | undefined): StaffDetailsPayload | undefined {
   if (!onclick) return undefined;
   const callStart = onclick.indexOf("openStaffDetails(");
   const objectStart = callStart < 0 ? -1 : onclick.indexOf("{", callStart);
@@ -229,13 +242,28 @@ function teacherMajor(onclick: string | undefined): string | undefined {
         const value: unknown = JSON.parse(onclick.slice(objectStart, index + 1));
         if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
         const major: unknown = Reflect.get(value, "Teach_major");
-        return typeof major === "string" ? normalizeStaffText(major) || undefined : undefined;
+        const email: unknown = Reflect.get(value, "Teach_email");
+        return { Teach_major: major, Teach_email: email };
       } catch {
         return undefined;
       }
     }
   }
   return undefined;
+}
+
+function teacherMajor(onclick: string | undefined): string | undefined {
+  const value = staffDetailsPayload(onclick)?.Teach_major;
+  return typeof value === "string" ? normalizeStaffText(value) || undefined : undefined;
+}
+
+function teacherEmail(onclick: string | undefined): string | undefined {
+  const value = staffDetailsPayload(onclick)?.Teach_email;
+  return typeof value === "string" ? normalizeStaffText(value) || undefined : undefined;
+}
+
+function isValidStaffEmail(value: string): boolean {
+  return value.length <= 254 && /^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)+$/iu.test(value);
 }
 
 function validateContext(context: StaffSnapshotContext): void {

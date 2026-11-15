@@ -46,13 +46,25 @@ describe("staff HTML snapshot review parser", () => {
     expect(review.records[0]).not.toHaveProperty("rawHtml");
   });
 
-  it("extracts the teaching department from the card payload and ignores unrelated personal fields", () => {
-    const html = `<div class="cursor-pointer" onclick="openStaffDetails({&quot;Teach_id&quot;:&quot;private-id&quot;,&quot;Teach_major&quot;:&quot;คณิตศาสตร์&quot;,&quot;Teach_phone&quot;:&quot;private-phone&quot;}, 'female', 'ท')">${card("ครู ตัวอย่าง", "ครู")}</div>`;
+  it("extracts only the approved teaching department and email from the card payload", () => {
+    const html = `<div class="cursor-pointer" onclick="openStaffDetails({&quot;Teach_id&quot;:&quot;private-id&quot;,&quot;Teach_major&quot;:&quot;คณิตศาสตร์&quot;,&quot;Teach_phone&quot;:&quot;private-phone&quot;,&quot;Teach_email&quot;:&quot;teacher@example.ac.th&quot;}, 'female', 'ท')">${card("ครู ตัวอย่าง", "ครู")}</div>`;
     const review = parseStaffSnapshot(html, context);
 
     expect(review.records[0]?.department).toBe("คณิตศาสตร์");
+    expect(review.records[0]?.email).toBe("teacher@example.ac.th");
     expect(review.records[0]).not.toHaveProperty("Teach_id");
     expect(review.records[0]).not.toHaveProperty("Teach_phone");
+  });
+
+  it("keeps a staff card reviewable when an email is malformed and excludes that email", () => {
+    const html = `<div class="cursor-pointer" onclick="openStaffDetails({&quot;Teach_email&quot;:&quot;not-an-email&quot;}, 'female', 'ท')">${card("ครู ตัวอย่าง", "ครู")}</div>`;
+    const review = parseStaffSnapshot(html, context);
+
+    expect(review.acceptedCount).toBe(1);
+    expect(review.readyForReview).toBe(true);
+    expect(review.records[0]).not.toHaveProperty("email");
+    expect(review.issues).toContainEqual(expect.objectContaining({ code: "STAFF_EMAIL_INVALID", severity: "warning", ordinal: 1 }));
+    expect(review.issues[0]?.message).not.toContain("not-an-email");
   });
 
   it("uses the enclosing department tab when Teach_major is empty", () => {

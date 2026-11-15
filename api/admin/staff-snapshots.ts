@@ -9,7 +9,7 @@ const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 const HTML_MIME = "text/html";
 const STAFF_SNAPSHOT_BUCKET = "directory-staff-raw";
 const STAFF_SNAPSHOT_SOURCE_TYPE = "staff_web_snapshot_review";
-const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v2";
+const STAFF_SNAPSHOT_SCHEMA_VERSION = "staff-web-card-v3";
 const STAFF_SNAPSHOT_URL = "https://main.phichai.ac.th/school-staff";
 
 type SnapshotUpload = {
@@ -105,7 +105,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       source_type: STAFF_SNAPSHOT_SOURCE_TYPE,
       source_url: upload.sourceUrl,
       captured_at: upload.capturedAt,
-      parser_version: "staff-html-tokenizer-v1",
+      parser_version: "staff-html-tokenizer-v2",
       schema_version: review.schemaVersion,
       storage_path: storagePath,
       checksum_sha256: checksum,
@@ -127,6 +127,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         search_name: record.searchName,
         category: record.category,
         ...(record.department ? { department: record.department } : {}),
+        ...(record.email ? { email: record.email } : {}),
         ...(record.title ? { title: record.title } : {}),
         source_row: record.sourceRow
       })));

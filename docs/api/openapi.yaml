@@ -11,7 +11,7 @@ paths:
       operationId: searchStudents
       security: []
       description: >-
-        Returns published students and approved staff ordered by directory order. Staff search matches display name, category, title and teaching department. Omitting q and every
+        Returns published students and approved staff ordered by directory order. Staff search matches display name, category, title, teaching department and approved email. Omitting q and every
         filter is a browse request that lists the whole published roster, one page
         at a time.
       parameters:
@@ -97,9 +97,12 @@ paths:
     get:
       operationId: getStaffSnapshotReview
       security: [{ bearerAuth: [] }]
-      parameters: [{ name: snapshotId, in: path, required: true, schema: { type: string, format: uuid } }]
+      parameters:
+        - { name: snapshotId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: offset, in: query, required: false, schema: { type: integer, minimum: 0, maximum: 1000000, default: 0 }, description: Zero-based offset for both the record and issue page }
       responses:
-        '200': { description: Restricted snapshot metadata, records, and validation issues }
+        '200': { description: Restricted snapshot metadata, one page of normalized candidate records and issues (500 each), and exact recordCount and issueCount totals }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /api/admin/staff-snapshots/{snapshotId}/approve:
@@ -108,7 +111,7 @@ paths:
       security: [{ bearerAuth: [] }]
       description: >-
         Publishes a reviewed staff snapshot through the atomic staff publication function. Only
-        displayName, category, title, and department become public; raw snapshot data remains private.
+        displayName, category, title, department, and the school-published email field become public; raw snapshot data remains private.
       parameters: [{ name: snapshotId, in: path, required: true, schema: { type: string, format: uuid } }]
       responses:
         '200': { description: Staff snapshot approved and visible in the public directory }
@@ -162,6 +165,7 @@ components:
         category: { type: string }
         department: { type: string, description: Teaching subject or department extracted from Teach_major; falls back to the staff page tab label }
         title: { type: string }
+        email: { type: string, format: email, description: Optional Teach_email address from the approved school staff page; exposed only after an authorized publisher approves the snapshot }
         publishedAt: { type: string, format: date-time }
     SearchResponse:
       type: object

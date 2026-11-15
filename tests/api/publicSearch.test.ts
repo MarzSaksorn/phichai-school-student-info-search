@@ -11,8 +11,8 @@ const state = vi.hoisted(() => ({
   ],
   staffPublication: null as { id: string; published_at: string } | null,
   staffRows: [
-    { public_id: "staff-test-1", display_name: "ครู ตัวอย่าง", search_name: "ครู ตัวอย่าง", category: "ครู", department: "คณิตศาสตร์", title: null },
-    { public_id: "staff-test-2", display_name: "ครู ตัวอย่างสอง", search_name: "ครู ตัวอย่างสอง", category: "ครู", department: "วิทยาศาสตร์", title: null }
+    { public_id: "staff-test-1", display_name: "ครู ตัวอย่าง", search_name: "ครู ตัวอย่าง", category: "ครู", department: "คณิตศาสตร์", title: null, email: null },
+    { public_id: "staff-test-2", display_name: "ครู ตัวอย่างสอง", search_name: "ครู ตัวอย่างสอง", category: "ครู", department: "วิทยาศาสตร์", title: null, email: null }
   ],
   eqCalls: [] as Array<[string, string, unknown]>,
   ilikeCalls: [] as Array<[string, string, unknown]>
@@ -61,8 +61,8 @@ describe("public student number search API", () => {
     state.ilikeCalls = [];
     state.staffPublication = null;
     state.staffRows = [
-      { public_id: "staff-test-1", display_name: "ครู ตัวอย่าง", search_name: "ครู ตัวอย่าง", category: "ครู", department: "คณิตศาสตร์", title: null },
-      { public_id: "staff-test-2", display_name: "ครู ตัวอย่างสอง", search_name: "ครู ตัวอย่างสอง", category: "ครู", department: "วิทยาศาสตร์", title: null }
+      { public_id: "staff-test-1", display_name: "ครู ตัวอย่าง", search_name: "ครู ตัวอย่าง", category: "ครู", department: "คณิตศาสตร์", title: null, email: null },
+      { public_id: "staff-test-2", display_name: "ครู ตัวอย่างสอง", search_name: "ครู ตัวอย่างสอง", category: "ครู", department: "วิทยาศาสตร์", title: null, email: null }
     ];
     state.policy = { student_public_fields: ["displayName", "studentNumber"], student_identifier_search: "exact_only", student_identifier_display: "public" };
   });
@@ -90,6 +90,26 @@ describe("public student number search API", () => {
 
     expect(staff).toMatchObject({ recordType: "staff", department: "คณิตศาสตร์" });
     expect(state.eqCalls).toContainEqual(["published_staff_records", "publication_version_id", "staff-publication-1"]);
+  });
+
+  it("returns approved staff email and matches public staff search against it", async () => {
+    state.staffPublication = { id: "staff-publication-1", published_at: "2026-11-15T00:00:00.000Z" };
+    state.staffRows = state.staffRows.map((row, index) => index === 0 ? { ...row, email: "teacher.one@example.ac.th" } : row);
+
+    const result = await searchPublishedStudents({ q: "teacher.one@example.ac.th", pageSize: 20 });
+    const staff = result.items.find((item) => item.recordType === "staff");
+
+    expect(staff).toMatchObject({ recordType: "staff", email: "teacher.one@example.ac.th" });
+  });
+
+  it("omits email from legacy published staff rows without an imported address", async () => {
+    state.staffPublication = { id: "staff-publication-legacy", published_at: "2026-11-15T00:00:00.000Z" };
+
+    const result = await searchPublishedStudents({ q: "", pageSize: 20 });
+    const staff = result.items.find((item) => item.recordType === "staff");
+
+    expect(staff).toBeDefined();
+    expect(staff).not.toHaveProperty("email");
   });
 
   it("filters exactly by department, excludes students, and returns every active department option", async () => {

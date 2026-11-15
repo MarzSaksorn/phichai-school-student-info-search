@@ -2,6 +2,8 @@ import type { ApiRequest, ApiResponse } from "../../../_lib/http.js";
 import { bearerToken, json, method, problem } from "../../../_lib/http.js";
 import { authenticatedActor, supabaseAdmin } from "../../../_lib/supabase.js";
 
+const STAFF_SNAPSHOT_EMAIL_SCHEMA_VERSION = "staff-web-card-v3";
+
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
   if (process.env.STAFF_SNAPSHOT_APPROVAL_ENABLED === "false") {
@@ -20,6 +22,11 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   try {
     const client = supabaseAdmin();
+    const { data: snapshotInfo, error: snapshotInfoError } = await client.schema("directory").from("staff_snapshot_jobs")
+      .select("schema_version").eq("id", snapshotId).maybeSingle();
+    if (snapshotInfoError) { problem(response, 500, "INTERNAL_ERROR", "Staff snapshot could not be published."); return; }
+    if (!snapshotInfo) { problem(response, 404, "NOT_FOUND", "Staff snapshot was not found"); return; }
+
     const { data, error } = await client.schema("directory").rpc("publish_staff_snapshot", {
       p_snapshot_id: snapshotId,
       p_actor_id: actor.id,
@@ -36,6 +43,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
     const publication = Array.isArray(data) ? data[0] : data;
+    const publicFields = ["displayName", "category", "title", "department"];
+    if (snapshotInfo.schema_version === STAFF_SNAPSHOT_EMAIL_SCHEMA_VERSION) publicFields.push("email");
     json(response, 200, {
       snapshot: {
         id: publication.snapshot_id,
@@ -43,7 +52,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         acceptedCount: publication.record_count,
         publishedAt: publication.published_at,
         publishable: true,
-        publicFields: ["displayName", "category", "title", "department"]
+        publicFields
       },
       note: "The reviewed staff snapshot is now visible in the public directory."
     });

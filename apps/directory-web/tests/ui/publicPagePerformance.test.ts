@@ -316,8 +316,25 @@ describe("public directory response cache and progressive loading", () => {
   it("keeps the approved output fields and avoids persistent browser storage", () => {
     expect(script).toContain("escapeHtml(item.displayName)");
     expect(script).toContain("escapeHtml(item.studentNumber)");
+    expect(script).toContain("safeMailtoHref(item.email)");
+    expect(script).toContain("escapeHtml(item.email)");
     expect(script).not.toContain("studentIdentifier");
     expect(script).not.toMatch(/localStorage\s*(?:\.|\[)|sessionStorage\s*(?:\.|\[)|indexedDB\s*\./u);
     expect(source).toContain("pageSize");
+  });
+
+  it("renders approved staff email as a safe mailto link", async () => {
+    const pageUnderTest = harness(async () => response({
+      items: [{ publicId: "staff-synthetic", recordType: "staff", displayName: "Synthetic Teacher", category: "Teacher", email: "teacher+qa@example.ac.th", publishedAt: "2026-01-01T00:00:00.000Z" }],
+      total: 1,
+      datasetVersion: "approved-fixture-v1",
+      publishedAt: "2026-01-01T00:00:00.000Z",
+      departments: []
+    }));
+    await pageUnderTest.flush();
+
+    const rendered = pageUnderTest.elements["#result-region"]?.innerHTML ?? "";
+    expect(rendered).toContain('href="mailto:teacher%2Bqa@example.ac.th"');
+    expect(rendered).toContain(">teacher+qa@example.ac.th</a>");
   });
 });

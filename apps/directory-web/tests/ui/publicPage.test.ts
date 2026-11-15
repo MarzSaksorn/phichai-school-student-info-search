@@ -76,6 +76,9 @@ describe("public directory UI v0", () => {
     expect(source).toContain("item.studentNumber");
     expect(source).toContain("escapeHtml(item.studentNumber)");
     expect(source).toContain("escapeHtml(item.department)");
+    expect(source).toContain("safeMailtoHref(item.email)");
+    expect(source).toContain("escapeHtml(item.email)");
+    expect(source).toContain("email-meta");
     expect(source).toContain("เลขประจำตัว");
     expect(source).toContain(".result-meta span:first-child { background: var(--pink-soft); color: var(--pink);");
     expect(source).toContain('.status-line[data-tone="success"] { color: color-mix(in srgb, var(--success) 70%, var(--ink)); }');

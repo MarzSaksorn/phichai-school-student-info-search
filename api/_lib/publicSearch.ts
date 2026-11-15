@@ -21,6 +21,7 @@ type PublicStaffItem = {
   category: string;
   department?: string;
   title?: string;
+  email?: string;
   publishedAt: string;
 };
 
@@ -52,6 +53,7 @@ type StaffRow = {
   category: string;
   department: string | null;
   title: string | null;
+  email: string | null;
 };
 
 const gradeOrder = (grade: string): number => { const match = /^ม\.(\d+)$/u.exec(grade); return match ? Number(match[1]) : Number.POSITIVE_INFINITY; };
@@ -85,7 +87,7 @@ const compareRosterRows = (a: RosterRow, b: RosterRow): number => {
 function staffMatches(row: StaffRow, q: string): boolean {
   if (!q) return true;
   const needle = q.toLocaleLowerCase("th-TH");
-  return [row.search_name, row.category, row.department ?? "", row.title ?? ""].some((value) => String(value ?? "").toLocaleLowerCase("th-TH").includes(needle));
+  return [row.search_name, row.category, row.department ?? "", row.title ?? "", row.email ?? ""].some((value) => String(value ?? "").toLocaleLowerCase("th-TH").includes(needle));
 }
 
 export async function searchPublishedStudents(input: PublicSearchInput): Promise<PublicSearchOutput> {
@@ -135,7 +137,7 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
   let allStaffRows: StaffRow[] = [];
   if (staffPublication) {
     const { data, error } = await client.schema("directory").from("published_staff_records")
-      .select("public_id,display_name,search_name,category,department,title").eq("publication_version_id", staffPublication.id).order("public_id", { ascending: true }).range(0, 999);
+      .select("public_id,display_name,search_name,category,department,title,email").eq("publication_version_id", staffPublication.id).order("public_id", { ascending: true }).range(0, 999);
     if (error) throw new Error("SEARCH_UNAVAILABLE");
     allStaffRows = (data ?? []) as StaffRow[];
   }
@@ -150,7 +152,7 @@ export async function searchPublishedStudents(input: PublicSearchInput): Promise
     .map((row) => ({ publicId: row.public_id, recordType: "student", displayName: row.display_name, ...(showStudentNumber && row.student_identifier ? { studentNumber: String(row.student_identifier) } : {}), academicYear: row.academic_year, grade: row.grade, room: row.room, ...(row.status ? { status: row.status } : {}), publishedAt }));
   const staffItems: PublicStaffItem[] = staff
     .sort((a, b) => a.display_name.localeCompare(b.display_name, "th-TH") || a.public_id.localeCompare(b.public_id))
-    .map((row) => ({ publicId: row.public_id, recordType: "staff", displayName: row.display_name, category: row.category, ...(row.department ? { department: row.department } : {}), ...(row.title ? { title: row.title } : {}), publishedAt }));
+    .map((row) => ({ publicId: row.public_id, recordType: "staff", displayName: row.display_name, category: row.category, ...(row.department ? { department: row.department } : {}), ...(row.title ? { title: row.title } : {}), ...(row.email ? { email: row.email } : {}), publishedAt }));
   const allItems: Array<PublicStudentItem | PublicStaffItem> = [...staffItems, ...studentItems];
   const items = allItems.slice(offset, offset + input.pageSize);
   const result: PublicSearchOutput = { items, total: allItems.length, datasetVersion: `${active.version}${staffItems.length ? "+staff" : ""}`, publishedAt, departments };

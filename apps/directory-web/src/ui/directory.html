@@ -167,6 +167,9 @@
     .result-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; color: var(--muted); font-size: 13px; }
     .result-meta span { padding: 3px 10px; border-radius: 999px; background: var(--surface); }
     .result-meta span:first-child { background: var(--pink-soft); color: var(--pink); font-weight: 700; }
+    .result-meta .email-meta { overflow-wrap: anywhere; }
+    .result-meta a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 2px; }
+    .result-meta a:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; border-radius: 2px; }
     .empty-state { padding: 42px 24px; border: 1px dashed #d6d1da; border-radius: 18px; background: var(--surface); text-align: center; }
     .empty-state h3 { margin: 0 0 6px; font-size: 20px; }
     .empty-state p { max-width: 460px; margin: 0 auto; color: var(--muted); }
@@ -277,7 +280,7 @@
         <div class="load-more"><button id="load-more" class="secondary-button daisy-btn daisy-btn-outline" type="button" hidden>ดูรายชื่อเพิ่มเติม</button></div>
       </section>
 
-      <section id="about" class="site-footer" aria-label="ข้อมูลเกี่ยวกับสารบบ"><p><strong>หลักการข้อมูล</strong><br>ข้อมูลนักเรียนมาจากไฟล์ XLSX ที่โรงเรียนอนุมัติเท่านั้น</p><p><strong>ข้อมูลที่แสดง</strong><br>ชื่อและเลขประจำตัวเผยแพร่ตามมติอนุมัติของโรงเรียน · ไม่แสดงแหล่งที่มาภายใน</p></section>
+      <section id="about" class="site-footer" aria-label="ข้อมูลเกี่ยวกับสารบบ"><p><strong>หลักการข้อมูล</strong><br>ข้อมูลนักเรียนมาจากไฟล์ XLSX ที่โรงเรียนอนุมัติ ข้อมูลบุคลากรและอีเมลอ้างอิงจากหน้าเว็บไซต์โรงเรียน</p><p><strong>ข้อมูลที่แสดง</strong><br>ข้อมูลบุคลากรเผยแพร่หลังผู้เผยแพร่ที่ได้รับอนุญาตตรวจทานและอนุมัติ · ไม่แสดงแหล่งที่มาภายใน</p></section>
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
@@ -322,9 +325,10 @@
       const setStatus = (message, tone = '') => { statusLine.textContent = message; statusLine.dataset.tone = tone; };
       const getFilters = () => ({ q: queryInput.value.trim(), academicYear: document.querySelector('#academic-year').value, grade: document.querySelector('#grade').value, room: document.querySelector('#room').value, status: document.querySelector('#status').value, department: document.querySelector('#department').value || departmentFromUrl });
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+      const safeMailtoHref = (value) => { const email = String(value ?? '').trim(); if (!/^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)+$/iu.test(email)) return ''; const at = email.lastIndexOf('@'); return 'mailto:' + encodeURIComponent(email.slice(0, at)) + '@' + email.slice(at + 1); };
       const updateDepartmentUrl = (department) => { if (!window.location || !window.history) return; const params = new URLSearchParams(window.location.search); if (department) params.set('department', department); else params.delete('department'); const query = params.toString(); window.history.replaceState({}, '', window.location.pathname + (query ? '?' + query : '') + (window.location.hash || '')); };
       const renderEmpty = (title, message) => { resultRegion.innerHTML = '<div class="empty-state"><h3>' + title + '</h3><p>' + message + '</p></div>'; resultCount.textContent = 'ไม่พบรายชื่อ'; nextCursor = ''; loadMore.hidden = true; resultRegion.removeAttribute('aria-busy'); };
-      const card = (item, index) => { const isStaff = item.recordType === 'staff'; const meta = isStaff ? '<span>' + escapeHtml(item.category) + '</span>' + (item.department ? '<span>วิชา/ฝ่าย: ' + escapeHtml(item.department) + '</span>' : '') + (item.title ? '<span>' + escapeHtml(item.title) + '</span>' : '') : (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span>'; return '<article class="result-card daisy-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (isStaff ? '<span class="result-status daisy-badge">บุคลากร</span>' : (item.status ? '<span class="result-status daisy-badge">' + escapeHtml(item.status) + '</span>' : '')) + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + meta + '</div></article>'; };
+      const card = (item, index) => { const isStaff = item.recordType === 'staff'; const emailHref = isStaff ? safeMailtoHref(item.email) : ''; const emailMeta = emailHref ? '<span class="email-meta">อีเมล: <a href="' + escapeHtml(emailHref) + '">' + escapeHtml(item.email) + '</a></span>' : ''; const meta = isStaff ? '<span>' + escapeHtml(item.category) + '</span>' + (item.department ? '<span>วิชา/ฝ่าย: ' + escapeHtml(item.department) + '</span>' : '') + (item.title ? '<span>' + escapeHtml(item.title) + '</span>' : '') + emailMeta : (item.studentNumber ? '<span>เลขประจำตัว ' + escapeHtml(item.studentNumber) + '</span>' : '') + '<span>' + escapeHtml(item.grade) + '</span><span>ห้อง ' + escapeHtml(item.room) + '</span><span>ปี ' + escapeHtml(item.academicYear) + '</span>'; return '<article class="result-card daisy-card"><div class="result-card-top"><span class="result-index">' + String(index).padStart(3, '0') + '</span>' + (isStaff ? '<span class="result-status daisy-badge">บุคลากร</span>' : (item.status ? '<span class="result-status daisy-badge">' + escapeHtml(item.status) + '</span>' : '')) + '</div><h3 class="result-name">' + escapeHtml(item.displayName) + '</h3><div class="result-meta">' + meta + '</div></article>'; };
       const animateCards = (grid) => {
         if (!canAnimateCards || !grid) return;
         const cards = grid.querySelectorAll('.result-card');
