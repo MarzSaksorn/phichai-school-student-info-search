@@ -104,7 +104,8 @@ export type AuditEventName =
   | "search_requested"
   | "search_succeeded"
   | "search_failed"
-  | "search_rate_limited";
+  | "search_rate_limited"
+  | "staff_snapshot_approved";
 
 export type AuditEvent = {
   id: string;
