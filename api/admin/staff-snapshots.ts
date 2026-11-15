@@ -57,8 +57,8 @@ function parseMultipart(request: IncomingMessage): Promise<SnapshotUpload> {
 
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
   if (!method(request, response, ["POST"])) return;
-  if (process.env.STAFF_SNAPSHOT_IMPORT_ENABLED !== "true") {
-    problem(response, 403, "FORBIDDEN", "Staff snapshot import is disabled until the school source policy is approved.");
+  if (process.env.STAFF_SNAPSHOT_IMPORT_ENABLED === "false") {
+    problem(response, 403, "FORBIDDEN", "Staff snapshot import is disabled by configuration.");
     return;
   }
   let actor;

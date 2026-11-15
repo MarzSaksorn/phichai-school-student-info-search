@@ -71,7 +71,7 @@ paths:
       security: [{ bearerAuth: [] }]
       description: >-
         Uploads an operator-provided HTML snapshot for private review. This endpoint never
-        fetches the school website and remains disabled until the school source policy is approved.
+        fetches the school website and is enabled by default; set STAFF_SNAPSHOT_IMPORT_ENABLED=false to disable it.
       requestBody:
         required: true
         content:

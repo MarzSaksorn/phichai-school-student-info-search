@@ -62,6 +62,7 @@ describe("Vercel API contracts", () => {
     const status = read("api/admin/staff-snapshots/[snapshotId].ts");
     const migration = read("apps/directory-worker/src/db/migrations/009_staff_snapshot_review.sql");
     expect(upload).toContain("STAFF_SNAPSHOT_IMPORT_ENABLED");
+    expect(upload).toContain('process.env.STAFF_SNAPSHOT_IMPORT_ENABLED === "false"');
     expect(upload).toContain("publishable: false");
     expect(upload).toContain('from("directory-raw")');
     expect(approval).toContain("STAFF_SNAPSHOT_APPROVAL_ENABLED");
